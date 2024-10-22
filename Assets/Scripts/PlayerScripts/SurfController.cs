@@ -553,7 +553,7 @@ public class SurfController : MonoBehaviour
         Gizmos.matrix = Matrix4x4.TRS(transform.position + new Vector3(0, 2.75f, 0), transform.rotation, headBox);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
         // front collision box
-        Gizmos.matrix = Matrix4x4.TRS(transform.position + new Vector3(0, 0, 2f), transform.rotation, frontBox);
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + transform.forward * 2, transform.rotation, frontBox);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
     }
 }
