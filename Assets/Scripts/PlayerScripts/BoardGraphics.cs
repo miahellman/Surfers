@@ -13,6 +13,7 @@ public class BoardGraphics : MonoBehaviour
 
     float rotValue;
     float targetRot;
+    float adjustDir;
 
     Animator anim;
 
@@ -22,7 +23,7 @@ public class BoardGraphics : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        anim = GetComponent<Animator>();
+        //anim = GetComponent<Animator>();
         rotValue = transform.localEulerAngles.z;
     }
 
@@ -36,7 +37,8 @@ public class BoardGraphics : MonoBehaviour
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
                 break;
             case FlipState.ADJUSTING:
-                rotValue = Mathf.LerpAngle(rotValue, targetRot, 50 * Time.deltaTime);
+                rotValue = Mathf.LerpAngle(rotValue, adjustDir * targetRot, 50 * Time.deltaTime);
+                //rotValue += adjustDir * 100 * Time.deltaTime;
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
                 if (rotValue == targetRot)
                 {
@@ -61,7 +63,7 @@ public class BoardGraphics : MonoBehaviour
         int intValue;
         if (value == 0) { intValue = 0; }
         else { intValue = Mathf.FloorToInt(Mathf.Sign(flipValue)); }
-        anim.SetInteger("FlipValue", intValue);
+        //anim.SetInteger("FlipValue", intValue);
     }
 
     public void SetFlipActive(bool active)
@@ -69,8 +71,9 @@ public class BoardGraphics : MonoBehaviour
         // stop flip
         if (flipping && !active)
         {
+            adjustDir = -Mathf.Sign(flipValue);
             flipState = FlipState.ADJUSTING;
-            targetRot = Mathf.Round(rotValue / 360) * 360;
+            targetRot = Mathf.Round(rotValue / 360) * 360; // nearest multiple of 360
             CheckSuccess();
             flipping = false;
         }

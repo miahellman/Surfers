@@ -27,7 +27,7 @@ public class CameraFollowPoint : MonoBehaviour
         transform.position = Vector3.Lerp(transform.position, pointToFollow.position + offset, 0.4f);
         float rotX = Mathf.LerpAngle(transform.eulerAngles.x, pointToFollow.eulerAngles.x, 0.065f);
         float rotY = Mathf.LerpAngle(transform.eulerAngles.y, pointToFollow.eulerAngles.y, 0.065f);
-        transform.rotation = Quaternion.Euler(new Vector3(rotX, rotY, pointToFollow.eulerAngles.z));
+        transform.rotation = Quaternion.Euler(new Vector3(rotX, rotY, 0));
     }
 
     void Update()

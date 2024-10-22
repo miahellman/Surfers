@@ -3,28 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
-public class HoverboardController : MonoBehaviour
+public class SurfController : MonoBehaviour
 {
     [SerializeField] LayerMask floorRaycastLayers;
+    [SerializeField] float dotTolerance = 0.5f;
 
     [Header("Motion")]
-    [SerializeField] float maxSpeed = 25f;
-    [SerializeField] float accel = 2f;
-    [SerializeField] float decel = 2f;
+    [SerializeField] float maxSpeed = 65f;
+    [SerializeField] float accel = 35f;
+    [SerializeField] float decel = 12f;
     [SerializeField] float breakDecelBase = 5f; // starting decel
-    [SerializeField] float breakDecelRate = 2;
+    [SerializeField] float breakDecelRate = 9.35f;
     float curBreakDecel;
     bool isBreaking;
     float breakTurnDir; // the direction we were turning when we started breaking
 
     [Header("Turning")]
-    [SerializeField] float initTurnSpeed = 2f;
-    [SerializeField] float initTurnAccel = 15f;
-    [SerializeField] float maxTurnSpeed = 5f;
-    [SerializeField] float turnAccel = 2f;
-    [SerializeField] float turnDecel = 2f;
-    [SerializeField] float boardTurnAmount = 6f;
-    [SerializeField] float breakTurnDecel = 4f;
+    [SerializeField] float initTurnSpeed = 1.75f;
+    [SerializeField] float initTurnAccel = 14f;
+    [SerializeField] float maxTurnSpeed = 3f;
+    [SerializeField] float turnAccel = 0.55f;
+    [SerializeField] float turnDecel = 4f;
+    [SerializeField] float boardTurnAmount = 10f;
+    [SerializeField] float breakTurnDecel = 1.3f;
     // turning
     float turnVelocity;
     float totalTurnVelocity; // the current turn velocity + the initial turn speed, used for decelerating during breaking
@@ -45,27 +46,33 @@ public class HoverboardController : MonoBehaviour
     [SerializeField] float maxSpinOutForce = 145;
 
     [Header("Jumping")]
-    [SerializeField] float gravityValue = 6f;
-    [SerializeField] float gravityMultiplier = 2f;
-    [SerializeField] float groundedDist = 0.5f;
-    [SerializeField] float jumpForce = 10f;
+    [SerializeField] float gravityValue = 13f;
+    [SerializeField] float gravityMultiplier = 3.2f;
+    [SerializeField] float groundedDist = 1.2f;
+    [SerializeField] float hoverHeight = 1.2f;
+    [SerializeField] float jumpForce = 100f;
     bool isGrounded = true;
     float curGravity;
     // upwards velocity
     float jumpVelocity;
+    
 
     [Header("Grinding")]
-    [SerializeField] float grindDetectHeight = 3f;
-    [SerializeField] float grindDetectWidth = 3f;
-    [SerializeField] float grindAngleDiff = 30f;
-    [SerializeField] float grindDecel = 15f;
+    [SerializeField] Vector3 grindDetectBox = new Vector3(5.3f, 3f, 10f);
+    [SerializeField] float grindAngleDiff = 60f;
+    [SerializeField] float grindDecel = 20f;
     bool canGrind = false;
     GrindObject currentGrind;
     Collider[] grindCollidersHit;
     Vector3 grindDir;
 
-    BoardGraphics board;
+    [Header("Collision Boxes")]
+    [SerializeField] Vector3 headBox = new Vector3(1.5f, 0.5f, 2);
+    [SerializeField] Vector3 frontBox = new Vector3(1, 0.4f, 1);
+    // for checking for a collider that can't be scaled in front of us
+    Collider validCollider; 
 
+    BoardGraphics board;
     Rigidbody rb;
 
     // forward velocity
@@ -77,7 +84,6 @@ public class HoverboardController : MonoBehaviour
     Vector3 finalCalculatedVelocity; // after the base, additional, and other forces (like spin out) have been put together
 
     float yaw;
-    float pitch;
 
     [HideInInspector] public GameObject graphics;
     float boardRoll;
@@ -107,9 +113,9 @@ public class HoverboardController : MonoBehaviour
         board = GetComponentInChildren<BoardGraphics>();
         graphics = transform.GetChild(0).gameObject;
 
-        boostsAvailable = baseBoostAmount;
-        boostsText.text = "x" + (boostsAvailable + additionalBoosts);
-        boostTimer = boostCooldown;
+        //boostsAvailable = baseBoostAmount;
+        //boostsText.text = "x" + (boostsAvailable + additionalBoosts);
+        //boostTimer = boostCooldown;
 
         curBoardRoll = graphics.transform.localEulerAngles.z;
         curBoardYaw = graphics.transform.localEulerAngles.y;
@@ -119,6 +125,7 @@ public class HoverboardController : MonoBehaviour
     void Update()
     {
         BoostCooldown();
+        CheckCollision();
 
         switch (movementState)
         {
@@ -149,7 +156,7 @@ public class HoverboardController : MonoBehaviour
 
     void ProcessStandardMovement()
     {
-        #region jumping
+        #region jumping and grounded
         if (!isGrounded) 
         { 
             jumpVelocity -= curGravity * gravityMultiplier * Time.deltaTime;
@@ -163,15 +170,22 @@ public class HoverboardController : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist + 1, floorRaycastLayers) && jumpVelocity <= 0)
         {
-            // hit the ground
-            isGrounded = true;
-            transform.position = new Vector3(transform.position.x, hit.point.y + groundedDist, transform.position.z);
-            jumpVelocity = 0;
+            //On the next line we're getting how similar the player's up direction and the surface outward direction are. It will be 1 if exactly the same, 0 if perfectly perpendicular, and -1 if they are in opposite directions.
+            float dotProduct = Vector3.Dot(transform.up, hit.normal);
 
-            // adjust for surface rotation
-            Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
-            Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, 0.1f);
-            rb.rotation = slerpedRot;
+            //And then this is where we just filter out any surfaces that are too steep.
+            if (dotProduct > dotTolerance)
+            {
+                // hit the ground
+                isGrounded = true;
+                transform.position = new Vector3(transform.position.x, hit.point.y + hoverHeight, transform.position.z);
+                jumpVelocity = 0;
+
+                // adjust for surface rotation
+                Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+                Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, 0.1f);
+                rb.rotation = slerpedRot;
+            }
 
             // if mid flip when hitting ground
             if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
@@ -446,27 +460,9 @@ public class HoverboardController : MonoBehaviour
         collisionActive = active;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!collisionActive || baseVelocity + additionalVelocity == 0) { return; }
-        if (other.gameObject.CompareTag("Wall"))
-        {
-            Vector3 dir = (transform.position - other.transform.position).normalized;
-            dir.y = 0;
-            dir += -transform.forward; // give a little extra push in the direct opposite forward velocity
-            isSpinningOut = true;
-            spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier));
-
-            // spins the player graphics
-            spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
-            spinOutRate = 1440;
-            curSpinOutOffset = spinOutRate / 2 * spinOutDir; // inital 'force'
-        }
-    }
-
     public bool CheckForGrind()
     {
-        grindCollidersHit = Physics.OverlapBox(transform.position - new Vector3(0, grindDetectHeight / 4), new Vector3(grindDetectWidth, grindDetectHeight / 2, 5), transform.rotation, LayerMask.GetMask("Grind"));
+        grindCollidersHit = Physics.OverlapBox(transform.position - new Vector3(0, grindDetectBox.y / 4), new Vector3(grindDetectBox.x / 2, grindDetectBox.y / 2, grindDetectBox.z / 2), transform.rotation, LayerMask.GetMask("Grind"));
         foreach (Collider coll in grindCollidersHit)
         {
             if (coll.TryGetComponent(out currentGrind))
@@ -490,9 +486,74 @@ public class HoverboardController : MonoBehaviour
         return false;
     }
 
+    void CheckCollision()
+    {
+
+        RaycastHit objectInFront;
+        if (Physics.Raycast(transform.position + transform.forward * 1.5f, transform.forward, out objectInFront, 2f))
+        {
+            float dotProduct = Vector3.Dot(transform.up, objectInFront.normal);
+            if (dotProduct < dotTolerance)
+            {
+                // if able to go up, don't collide
+                validCollider = objectInFront.collider;
+            }
+        }
+        else
+        {
+            validCollider = null;
+        }
+
+        // front
+        if (!collisionActive || baseVelocity + additionalVelocity == 0) { return; }
+        Collider[] wallsHitFront = Physics.OverlapBox(transform.position + transform.forward * 2, frontBox / 2, transform.rotation);
+        foreach (Collider coll in wallsHitFront)
+        {
+            CollideObject collided;
+            if (coll.TryGetComponent<CollideObject>(out collided))
+            {
+                if (coll == validCollider)
+                {
+                    Vector3 dir = (transform.position - collided.transform.position).normalized;
+                    dir.y = 0;
+                    dir += -transform.forward; // give a little extra push in the direct opposite forward velocity
+                    isSpinningOut = true;
+                    spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier));
+
+                    // spins the player graphics
+                    spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
+                    spinOutRate = 1440;
+                    curSpinOutOffset = spinOutRate / 2 * spinOutDir; // inital 'force'
+                }
+            }
+        }
+
+        // head
+        Collider[] wallsHitHead = Physics.OverlapBox(transform.position + new Vector3(0, 2.75f, 0), new Vector3(0.75f, 0.25f, 1f), transform.rotation);
+        foreach (Collider coll in wallsHitHead)
+        {
+            CollideObject collided;
+            if (coll.TryGetComponent<CollideObject>(out collided))
+            {
+                //jumpVelocity *= -1;
+            }
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         Debug.DrawRay(transform.position, -transform.up * groundedDist, Color.red);
-        Gizmos.DrawWireCube(transform.position - new Vector3(0, grindDetectHeight / 4), new Vector3(grindDetectWidth, grindDetectHeight / 2, 5));
+        Debug.DrawRay(transform.position + transform.forward * 2, transform.forward * 1.5f, Color.blue);
+
+        Gizmos.color = Color.green;
+        // grind detect box
+        Gizmos.matrix = Matrix4x4.TRS(transform.position - new Vector3(0, grindDetectBox.y / 2), transform.rotation, grindDetectBox);
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+        // head collision box
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + new Vector3(0, 2.75f, 0), transform.rotation, headBox);
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+        // front collision box
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + new Vector3(0, 0, 2f), transform.rotation, frontBox);
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
     }
 }

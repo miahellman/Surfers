@@ -14,7 +14,7 @@ public class CameraControl : MonoBehaviour
 
     CameraFollowPoint followPointController;
 
-    HoverboardController hoverboard;
+    SurfController player;
 
     public static CameraControl instance;
 
@@ -25,7 +25,7 @@ public class CameraControl : MonoBehaviour
         followPointController = GetComponentInParent<CameraFollowPoint>();
         followPoint = followPointController.pointToFollow;
         defaultFollowPointPos = followPoint.localPosition;
-        hoverboard = FindObjectOfType<HoverboardController>();
+        player = FindObjectOfType<SurfController>();
 
         instance = this;
     }
@@ -34,7 +34,7 @@ public class CameraControl : MonoBehaviour
     void Update()
     {
         //fovOffset = followPointController.DistFromTarget() * fovMultiplier;
-        fovOffset = (Mathf.Max(0, hoverboard.ForwardVelocity().magnitude) / 5) * fovMultiplier;
+        fovOffset = (Mathf.Max(0, player.ForwardVelocity().magnitude) / 5) * fovMultiplier;
         GetComponent<Camera>().fieldOfView = defaultFOV + fovOffset;
     }
 
