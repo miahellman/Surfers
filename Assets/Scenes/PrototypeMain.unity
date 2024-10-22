@@ -1255,6 +1255,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 2248882880842816280, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
+      propertyPath: decel
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 2248882880842816280, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
       propertyPath: jumpForce
       value: 78
       objectReference: {fileID: 0}

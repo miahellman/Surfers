@@ -490,7 +490,7 @@ public class SurfController : MonoBehaviour
     {
 
         RaycastHit objectInFront;
-        if (Physics.Raycast(transform.position + transform.forward * 1.5f, transform.forward, out objectInFront, 2f))
+        if (Physics.SphereCast(transform.position - transform.forward, 1.5f, transform.forward, out objectInFront, 3))
         {
             float dotProduct = Vector3.Dot(transform.up, objectInFront.normal);
             if (dotProduct < dotTolerance)
@@ -542,8 +542,12 @@ public class SurfController : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        // ground raycast
         Debug.DrawRay(transform.position, -transform.up * groundedDist, Color.red);
-        Debug.DrawRay(transform.position + transform.forward * 2, transform.forward * 1.5f, Color.blue);
+        // forward collision spherecast
+        //Debug.DrawRay(transform.position + transform.forward * 2, transform.forward * (baseVelocity + additionalVelocity), Color.blue);
+        Gizmos.DrawWireSphere(transform.position + (transform.forward * 3), 1.5f);
+        //Gizmos.DrawWireSphere(transform.position - transform.forward, 1.5f);
 
         Gizmos.color = Color.green;
         // grind detect box
