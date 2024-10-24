@@ -6,6 +6,7 @@ public class BoardGraphics : MonoBehaviour
 {
     [SerializeField] float rotSpeed = 540;
     [SerializeField] float rotError = 20; // how many angles off still counts as a success?
+    [SerializeField] float adjustSpeed = 100;
 
     bool flipping = false;
     float flipDir;
@@ -17,7 +18,7 @@ public class BoardGraphics : MonoBehaviour
 
     Animator anim;
 
-    public enum FlipState { FLIPPING, ADJUSTING, IDLE };
+    public enum FlipState { FLIPPING, ADJUSTING, IDLE, FAILED };
     FlipState flipState = FlipState.IDLE;
 
     // Start is called before the first frame update
@@ -37,23 +38,47 @@ public class BoardGraphics : MonoBehaviour
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
                 break;
             case FlipState.ADJUSTING:
-                rotValue = Mathf.LerpAngle(rotValue, adjustDir * targetRot, 50 * Time.deltaTime);
-                //rotValue += adjustDir * 100 * Time.deltaTime;
+                rotValue += adjustDir * adjustSpeed * Time.deltaTime;
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
-                if (rotValue == targetRot)
+
+                if (Mathf.Abs(transform.localEulerAngles.z - 0) < 2f)
                 {
                     flipState = FlipState.IDLE;
                 }
+
+                //rotValue = Mathf.LerpAngle(rotValue, adjustDir * targetRot, 50 * Time.deltaTime);
+                ////rotValue += adjustDir * 100 * Time.deltaTime;
+                //transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
+                //if (rotValue == targetRot)
+                //{
+                //    flipState = FlipState.IDLE;
+                //}
+                break;
+            case FlipState.FAILED:
+                //if (FindObjectOfType<SurfController>().IsGrounded())
+                //{
+                //    flipState = FlipState.ADJUSTING;
+                //}    
                 break;
         }
     }
 
     IEnumerator ResetRotation()
     {
-        while (transform.localEulerAngles.z % 180 > 0)
+        flipState = FlipState.ADJUSTING;
+        while (transform.localEulerAngles.z % 360 > 0.5f)
         {
+            rotValue += adjustDir * adjustSpeed * Time.deltaTime;
+            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
             yield return null;
         }
+        flipState = FlipState.IDLE;
+    }
+
+    IEnumerator FailAndReset()
+    {
+        yield return new WaitForSeconds(0.1f);
+        flipState = FlipState.ADJUSTING;
     }
 
     public void SetValue(float value)
@@ -68,16 +93,27 @@ public class BoardGraphics : MonoBehaviour
 
     public void SetFlipActive(bool active)
     {
+        if (flipState == FlipState.ADJUSTING || flipState == FlipState.FAILED) { return; }
+
         // stop flip
         if (flipping && !active)
         {
             adjustDir = -Mathf.Sign(flipValue);
-            flipState = FlipState.ADJUSTING;
             targetRot = Mathf.Round(rotValue / 360) * 360; // nearest multiple of 360
-            CheckSuccess();
+            if (CheckSuccess())
+            {
+                flipState = FlipState.ADJUSTING;
+            }
+            else
+            {
+                flipState = FlipState.FAILED;
+                StartCoroutine(FailAndReset());
+            }
+            //StartCoroutine(ResetRotation());
             flipping = false;
         }
-        else if (!flipping && active) // start flip
+        // start flip
+        else if (!flipping && active) 
         {
             flipState = FlipState.FLIPPING;
             flipping = true;

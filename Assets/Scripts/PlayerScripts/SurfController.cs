@@ -14,6 +14,7 @@ public class SurfController : MonoBehaviour
     [SerializeField] float decel = 12f;
     [SerializeField] float breakDecelBase = 5f; // starting decel
     [SerializeField] float breakDecelRate = 9.35f;
+    [SerializeField] float floorRotSpeed = 30;
     float curBreakDecel;
     bool isBreaking;
     float breakTurnDir; // the direction we were turning when we started breaking
@@ -61,6 +62,9 @@ public class SurfController : MonoBehaviour
     [SerializeField] Vector3 grindDetectBox = new Vector3(5.3f, 3f, 10f);
     [SerializeField] float grindAngleDiff = 60f;
     [SerializeField] float grindDecel = 20f;
+    [SerializeField] float inputWindow = 0.25f;
+    Coroutine grindInputCo;
+    bool grindInputActive; // for input window
     bool canGrind = false;
     GrindObject currentGrind;
     Collider[] grindCollidersHit;
@@ -70,7 +74,20 @@ public class SurfController : MonoBehaviour
     [SerializeField] Vector3 headBox = new Vector3(1.5f, 0.5f, 2);
     [SerializeField] Vector3 frontBox = new Vector3(1, 0.4f, 1);
     // for checking for a collider that can't be scaled in front of us
-    Collider validCollider; 
+    Collider validCollider;
+
+    // wallride
+    [Header("Wallriding")]
+    [SerializeField] float wallRideDist = 2f;
+    [SerializeField] float wallDismountForce = 75f;
+    RaycastHit curWallRide;
+    bool wallLeft;
+    bool wallRight;
+    bool wallRideInputActive = false;
+    RaycastHit leftWallHit;
+    RaycastHit rightWallHit;
+    Quaternion startRot;
+    Coroutine wallrideInputCo;
 
     BoardGraphics board;
     Rigidbody rb;
@@ -81,6 +98,7 @@ public class SurfController : MonoBehaviour
     float additionalAccel;
     float additionalTarget;
     bool additionalTargetReached;
+    Vector3 additionalForce; // any additional force
     Vector3 finalCalculatedVelocity; // after the base, additional, and other forces (like spin out) have been put together
 
     float yaw;
@@ -125,14 +143,68 @@ public class SurfController : MonoBehaviour
     void Update()
     {
         BoostCooldown();
-        CheckCollision();
 
         switch (movementState)
         {
             case MovementState.STANDARD:
                 ProcessStandardMovement();
                 CheckForGrind();
-                if (canGrind && Input.GetButtonDown("Grind"))
+                CheckCollision();
+
+                if (CheckForWall())
+                {
+                    // TODO also do input window
+                    if (wallRideInputActive)
+                    {
+                        // start wallride
+
+                        // TODO if wall on left and right, need to choose which one is closer, OR just dont design level like that...
+                        if (wallLeft) 
+                        { 
+                            curWallRide = leftWallHit;
+                            //Vector3 attachPoint = leftWallHit.point + leftWallHit.normal * 1;
+                            //transform.position = attachPoint;
+                            //wallrideDir = Quaternion.AngleAxis(-90, Vector3.up) * leftWallHit.normal;
+                        }
+                        else if (wallRight) 
+                        { 
+                            curWallRide = rightWallHit;
+                            //Vector3 attachPoint = rightWallHit.point + rightWallHit.normal * 1;
+                            //transform.position = attachPoint;
+                            //wallrideDir = Quaternion.AngleAxis(90, Vector3.up) * rightWallHit.normal;
+                        }
+
+                        //rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
+                        //transform.position = new Vector3(transform.position.x, curWallRide.point.y + hoverHeight, transform.position.z);
+                        startRot = transform.rotation;
+                        rb.angularVelocity = Vector3.zero;
+
+                        movementState = MovementState.WALLRIDE;
+                    }
+                }
+
+                if (Input.GetButtonDown("Wallride"))
+                {
+                    wallrideInputCo = StartCoroutine(WallrideInputWindow());
+                }
+                if (Input.GetButtonUp("Wallride"))
+                {
+                    StopCoroutine(wallrideInputCo);
+                    wallRideInputActive = false;
+                }
+
+                if (Input.GetButtonDown("Grind"))
+                {
+                    // start input window timer
+                    grindInputCo = StartCoroutine(GrindInputWindow());
+                }
+                if (Input.GetButtonUp("Grind"))
+                {
+                    StopCoroutine(grindInputCo);
+                    grindInputActive = false;
+                }
+
+                if (canGrind && grindInputActive)
                 {
                     // start grind
                     canGrind = false;
@@ -151,7 +223,24 @@ public class SurfController : MonoBehaviour
                 ProcessGrindMovement();
                 CheckForGrind();
                 break;
+            case MovementState.WALLRIDE:
+                ProcessWallrideMovement();
+                break;
         }
+    }
+
+    IEnumerator GrindInputWindow()
+    {
+        grindInputActive = true;
+        yield return new WaitForSeconds(inputWindow);
+        grindInputActive = false;
+    }
+
+    IEnumerator WallrideInputWindow()
+    {
+        wallRideInputActive = true;
+        yield return new WaitForSeconds(inputWindow);
+        wallRideInputActive = false;
     }
 
     void ProcessStandardMovement()
@@ -168,7 +257,7 @@ public class SurfController : MonoBehaviour
         }
 
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist + 1, floorRaycastLayers) && jumpVelocity <= 0)
+        if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist, floorRaycastLayers) && jumpVelocity <= 0)
         {
             //On the next line we're getting how similar the player's up direction and the surface outward direction are. It will be 1 if exactly the same, 0 if perfectly perpendicular, and -1 if they are in opposite directions.
             float dotProduct = Vector3.Dot(transform.up, hit.normal);
@@ -183,7 +272,7 @@ public class SurfController : MonoBehaviour
 
                 // adjust for surface rotation
                 Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
-                Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, 0.1f);
+                Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
                 rb.rotation = slerpedRot;
             }
 
@@ -282,12 +371,13 @@ public class SurfController : MonoBehaviour
         // always push spin out force to zero
         spinOutVector = Vector3.Lerp(spinOutVector, Vector3.zero, spinOutRecovery * Time.deltaTime);
 
-        finalCalculatedVelocity = (baseVelocity + additionalVelocity) * transform.forward + spinOutVector + (Vector3.up * jumpVelocity);
+        additionalForce = Vector3.Lerp(additionalForce, Vector3.zero, 5 * Time.deltaTime);
+
+        finalCalculatedVelocity = (baseVelocity + additionalVelocity) * transform.forward + spinOutVector + additionalForce + (Vector3.up * jumpVelocity);
 
         rb.velocity = finalCalculatedVelocity;
         #endregion
 
-        float verInput = Input.GetAxisRaw("Vertical");
         float horInput = Input.GetAxisRaw("Horizontal");
 
         #region breaking
@@ -412,6 +502,83 @@ public class SurfController : MonoBehaviour
         }
     }
 
+    void ProcessWallrideMovement()
+    {
+
+        rb.velocity = transform.forward * (baseVelocity + additionalVelocity);
+
+        Quaternion initTargetRot = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
+        Quaternion initSlerpedRot = Quaternion.Slerp(transform.rotation, initTargetRot, floorRotSpeed * 1.25f * Time.deltaTime);
+        float rotDist = Vector3.Distance(initTargetRot.eulerAngles, initSlerpedRot.eulerAngles); // gets initial rotation, facing wall
+
+        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 && !isBreaking)
+        {
+            if (turnVelocity < initTurnSpeed) { turnVelocity += initTurnAccel * Time.deltaTime; }
+            else { turnVelocity += turnAccel * Time.deltaTime; }
+        }
+        else
+        {
+            turnVelocity = Mathf.MoveTowards(turnVelocity, 0, turnDecel * Time.deltaTime);
+        }
+
+        turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed / 2);
+        yaw = turnVelocity * Input.GetAxis("Horizontal");
+        rb.angularVelocity = yaw * transform.up;
+
+        RaycastHit hit;
+        if (rotDist > 1)
+        {
+            rb.rotation = initSlerpedRot;
+            //transform.position =  + (transform.up * hoverHeight);
+        }
+        else if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist + 1, LayerMask.GetMask("Wallride")))
+        {
+            if (hit.collider == curWallRide.collider)
+            {
+                Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+                Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
+                rb.rotation = slerpedRot;
+                //transform.position = transform.position + (transform.up * hoverHeight);
+                print("wall");
+            }
+        }
+        else
+        {
+            // stop wallride
+            print("stop wallride");
+            rb.angularVelocity = Vector3.zero;
+            rb.rotation = startRot;
+            wallRideInputActive = false;
+            transform.position += transform.forward * 3;
+            movementState = MovementState.STANDARD;
+            //rb.rotation = Quaternion.Slerp(transform.rotation, startRot, floorRotSpeed * Time.deltaTime);
+        }
+
+
+        // jump off wall
+        if (Input.GetButtonUp("Wallride"))
+        {
+            additionalForce = new Vector3(transform.up.x, 0, transform.up.z) * wallDismountForce;
+            rb.rotation = Quaternion.Euler(new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0)); ;
+            wallRideInputActive = false;
+            movementState = MovementState.STANDARD;
+        }
+
+        RaycastHit groundHit;
+        // too close to ground/edge of wall
+        Vector3 groundDir;
+        if (wallLeft) { groundDir = transform.right; }
+        else { groundDir = -transform.right; }
+        if (Physics.Raycast(transform.position, groundDir, out groundHit, 1, LayerMask.GetMask("Ground")))
+        {
+            print("too close to ground");
+            Vector3 horizontalPush = new Vector3(transform.up.x, 0, transform.up.z) * 0.5f;
+            transform.position = new Vector3(transform.position.x, groundHit.point.y + hoverHeight, transform.position.z) + horizontalPush;
+            transform.rotation = Quaternion.FromToRotation(transform.up, groundHit.normal) * transform.rotation;
+            movementState = MovementState.STANDARD;
+        }
+    }
+
     public void Boost(float targetVelocity, float accelRate)
     {
         additionalTarget = targetVelocity;
@@ -443,23 +610,6 @@ public class SurfController : MonoBehaviour
         }
     }
 
-    // total forward velocity
-    public Vector3 ForwardVelocity()
-    {
-        return (baseVelocity + additionalVelocity) * transform.forward + spinOutVector;
-    }
-
-    // are we currently spinning out?
-    public bool IsSpinningOut()
-    {
-        return isSpinningOut;
-    }
-
-    public void SetCollisionActive(bool active)
-    {
-        collisionActive = active;
-    }
-
     public bool CheckForGrind()
     {
         grindCollidersHit = Physics.OverlapBox(transform.position - new Vector3(0, grindDetectBox.y / 4), new Vector3(grindDetectBox.x / 2, grindDetectBox.y / 2, grindDetectBox.z / 2), transform.rotation, LayerMask.GetMask("Grind"));
@@ -484,6 +634,31 @@ public class SurfController : MonoBehaviour
         if (currentGrind != null) { currentGrind.HighlightColor(false); movementState = MovementState.STANDARD; }
         currentGrind = null;
         return false;
+    }
+
+    public bool CheckForWall()
+    {
+        wallLeft = Physics.Raycast(transform.position, -transform.right, out leftWallHit, wallRideDist, LayerMask.GetMask("Wallride"));
+        wallRight = Physics.Raycast(transform.position, transform.right, out rightWallHit, wallRideDist, LayerMask.GetMask("Wallride"));
+
+        if (wallLeft) 
+        { 
+            leftWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
+            return true;
+            //if (leftWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(leftWallHit.normal)) { return true; }
+            //else { return false; } 
+        }
+        else if (wallRight) 
+        { 
+            rightWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
+            return true;
+            //if (rightWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(rightWallHit.normal)) { return true; }
+            //else { return false; }
+        }
+        else 
+        { 
+            return false; 
+        }
     }
 
     void CheckCollision()
@@ -540,14 +715,36 @@ public class SurfController : MonoBehaviour
         }
     }
 
+    #region PROPERTY GETTERS
+    // total forward velocity
+    public Vector3 ForwardVelocity()
+    {
+        return (baseVelocity + additionalVelocity) * transform.forward + spinOutVector;
+    }
+
+    // are we currently spinning out?
+    public bool IsSpinningOut()
+    {
+        return isSpinningOut;
+    }
+
+    public bool IsGrounded()
+    {
+        return isGrounded;
+    }
+    #endregion
+
     private void OnDrawGizmosSelected()
     {
         // ground raycast
         Debug.DrawRay(transform.position, -transform.up * groundedDist, Color.red);
+        // wall raycasts
+        Debug.DrawRay(transform.position, transform.right * wallRideDist, Color.red);
+        Debug.DrawRay(transform.position, -transform.right * wallRideDist, Color.red);
         // forward collision spherecast
-        //Debug.DrawRay(transform.position + transform.forward * 2, transform.forward * (baseVelocity + additionalVelocity), Color.blue);
         Gizmos.DrawWireSphere(transform.position + (transform.forward * 3), 1.5f);
         //Gizmos.DrawWireSphere(transform.position - transform.forward, 1.5f);
+        
 
         Gizmos.color = Color.green;
         // grind detect box
