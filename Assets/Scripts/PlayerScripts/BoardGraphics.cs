@@ -38,21 +38,24 @@ public class BoardGraphics : MonoBehaviour
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
                 break;
             case FlipState.ADJUSTING:
-                rotValue += adjustDir * adjustSpeed * Time.deltaTime;
-                transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
-
-                if (Mathf.Abs(transform.localEulerAngles.z - 0) < 2f)
-                {
-                    flipState = FlipState.IDLE;
-                }
-
-                //rotValue = Mathf.LerpAngle(rotValue, adjustDir * targetRot, 50 * Time.deltaTime);
-                ////rotValue += adjustDir * 100 * Time.deltaTime;
+                //rotValue += adjustDir * adjustSpeed * Time.deltaTime;
                 //transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
-                //if (rotValue == targetRot)
+
+                //if (Mathf.Abs(transform.localEulerAngles.z - 0) < 2f)
                 //{
                 //    flipState = FlipState.IDLE;
                 //}
+
+                rotValue = Mathf.LerpAngle(rotValue, adjustDir * targetRot, adjustSpeed * Time.deltaTime);
+                //rotValue += adjustDir * 100 * Time.deltaTime;
+                transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
+                if (rotValue == targetRot)
+                {
+                    flipState = FlipState.IDLE;
+                }
+                break;
+            case FlipState.IDLE:
+                transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0);
                 break;
             case FlipState.FAILED:
                 //if (FindObjectOfType<SurfController>().IsGrounded())
@@ -100,15 +103,16 @@ public class BoardGraphics : MonoBehaviour
         {
             adjustDir = -Mathf.Sign(flipValue);
             targetRot = Mathf.Round(rotValue / 360) * 360; // nearest multiple of 360
-            if (CheckSuccess())
-            {
-                flipState = FlipState.ADJUSTING;
-            }
-            else
-            {
-                flipState = FlipState.FAILED;
-                StartCoroutine(FailAndReset());
-            }
+            //if (CheckSuccess())
+            //{
+            //    flipState = FlipState.ADJUSTING;
+            //}
+            //else
+            //{
+            //    flipState = FlipState.FAILED;
+            //    StartCoroutine(FailAndReset());
+            //}
+            flipState = FlipState.ADJUSTING;
             //StartCoroutine(ResetRotation());
             flipping = false;
         }

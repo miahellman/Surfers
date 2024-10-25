@@ -52,6 +52,7 @@ public class SurfController : MonoBehaviour
     [SerializeField] float groundedDist = 1.2f;
     [SerializeField] float hoverHeight = 1.2f;
     [SerializeField] float jumpForce = 100f;
+    ArcCastComponent arcCast;
     bool isGrounded = true;
     float curGravity;
     // upwards velocity
@@ -71,8 +72,10 @@ public class SurfController : MonoBehaviour
     Vector3 grindDir;
 
     [Header("Collision Boxes")]
+    [SerializeField] CollisionBox playerBox;
+    [SerializeField] CollisionBox frontBox;
+    [SerializeField] CollisionBox collisionBox;
     [SerializeField] Vector3 headBox = new Vector3(1.5f, 0.5f, 2);
-    [SerializeField] Vector3 frontBox = new Vector3(1, 0.4f, 1);
     // for checking for a collider that can't be scaled in front of us
     Collider validCollider;
 
@@ -88,6 +91,7 @@ public class SurfController : MonoBehaviour
     RaycastHit rightWallHit;
     Quaternion startRot;
     Coroutine wallrideInputCo;
+    Vector3 wallrideDir;
 
     BoardGraphics board;
     Rigidbody rb;
@@ -129,6 +133,7 @@ public class SurfController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         board = GetComponentInChildren<BoardGraphics>();
+        arcCast = GetComponent<ArcCastComponent>();
         graphics = transform.GetChild(0).gameObject;
 
         //boostsAvailable = baseBoostAmount;
@@ -158,6 +163,7 @@ public class SurfController : MonoBehaviour
                     {
                         // start wallride
 
+                        Vector3 attachPoint;
                         // TODO if wall on left and right, need to choose which one is closer, OR just dont design level like that...
                         if (wallLeft) 
                         { 
@@ -165,17 +171,22 @@ public class SurfController : MonoBehaviour
                             //Vector3 attachPoint = leftWallHit.point + leftWallHit.normal * 1;
                             //transform.position = attachPoint;
                             //wallrideDir = Quaternion.AngleAxis(-90, Vector3.up) * leftWallHit.normal;
+                            attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + transform.right;
                         }
-                        else if (wallRight) 
+                        else
                         { 
                             curWallRide = rightWallHit;
                             //Vector3 attachPoint = rightWallHit.point + rightWallHit.normal * 1;
                             //transform.position = attachPoint;
                             //wallrideDir = Quaternion.AngleAxis(90, Vector3.up) * rightWallHit.normal;
+                            attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + -transform.right;
                         }
 
                         //rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
                         //transform.position = new Vector3(transform.position.x, curWallRide.point.y + hoverHeight, transform.position.z);
+                        transform.position = attachPoint;
+                        graphics.transform.localEulerAngles = Vector3.zero;
+                        //Time.timeScale = 0;
                         startRot = transform.rotation;
                         rb.angularVelocity = Vector3.zero;
 
@@ -257,17 +268,48 @@ public class SurfController : MonoBehaviour
         }
 
         RaycastHit hit;
+        //if (arcCast.ArcCast(transform.position, transform.rotation, arcCast.arcAngle, groundedDist, arcCast.arcResolution, floorRaycastLayers, out hit) && jumpVelocity <= 0)
+        //{
+        //    float dotProduct = Vector3.Dot(transform.up, hit.normal);
+
+        //    //And then this is where we just filter out any surfaces that are too steep.
+        //    if (dotProduct > dotTolerance)
+        //    {
+        //        RaycastHit straightDownHit;
+        //        if (Physics.Raycast(transform.position, -transform.up, out straightDownHit, groundedDist + 10, floorRaycastLayers) && jumpVelocity <= 0)
+        //        {
+        //            transform.position = new Vector3(transform.position.x, straightDownHit.point.y + hoverHeight, transform.position.z);
+        //        }
+
+        //        // hit the ground
+        //        isGrounded = true;
+        //        jumpVelocity = 0;
+
+        //        // adjust for surface rotation
+        //        Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+        //        Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
+        //        rb.rotation = slerpedRot;
+        //    }
+
+        //    // if mid flip when hitting ground
+        //    if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
+        //    {
+        //        jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
+        //        baseVelocity *= 0.3f;
+        //        additionalVelocity *= 0.3f;
+        //    }
+
+        //}
         if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist, floorRaycastLayers) && jumpVelocity <= 0)
         {
-            //On the next line we're getting how similar the player's up direction and the surface outward direction are. It will be 1 if exactly the same, 0 if perfectly perpendicular, and -1 if they are in opposite directions.
             float dotProduct = Vector3.Dot(transform.up, hit.normal);
 
             //And then this is where we just filter out any surfaces that are too steep.
             if (dotProduct > dotTolerance)
             {
                 // hit the ground
-                isGrounded = true;
                 transform.position = new Vector3(transform.position.x, hit.point.y + hoverHeight, transform.position.z);
+                isGrounded = true;
                 jumpVelocity = 0;
 
                 // adjust for surface rotation
@@ -292,7 +334,9 @@ public class SurfController : MonoBehaviour
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             jumpVelocity = Mathf.Sqrt(jumpForce * gravityValue);
+            isGrounded = false;
         }
+
         #endregion
 
         #region flipping
@@ -370,7 +414,6 @@ public class SurfController : MonoBehaviour
 
         // always push spin out force to zero
         spinOutVector = Vector3.Lerp(spinOutVector, Vector3.zero, spinOutRecovery * Time.deltaTime);
-
         additionalForce = Vector3.Lerp(additionalForce, Vector3.zero, 5 * Time.deltaTime);
 
         finalCalculatedVelocity = (baseVelocity + additionalVelocity) * transform.forward + spinOutVector + additionalForce + (Vector3.up * jumpVelocity);
@@ -508,7 +551,7 @@ public class SurfController : MonoBehaviour
         rb.velocity = transform.forward * (baseVelocity + additionalVelocity);
 
         Quaternion initTargetRot = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
-        Quaternion initSlerpedRot = Quaternion.Slerp(transform.rotation, initTargetRot, floorRotSpeed * 1.25f * Time.deltaTime);
+        Quaternion initSlerpedRot = Quaternion.Slerp(transform.rotation, initTargetRot, floorRotSpeed * 2f * Time.deltaTime);
         float rotDist = Vector3.Distance(initTargetRot.eulerAngles, initSlerpedRot.eulerAngles); // gets initial rotation, facing wall
 
         if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 && !isBreaking)
@@ -526,12 +569,12 @@ public class SurfController : MonoBehaviour
         rb.angularVelocity = yaw * transform.up;
 
         RaycastHit hit;
-        if (rotDist > 1)
+        if (rotDist > 5)
         {
             rb.rotation = initSlerpedRot;
             //transform.position =  + (transform.up * hoverHeight);
         }
-        else if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist + 1, LayerMask.GetMask("Wallride")))
+        else if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist + 3, LayerMask.GetMask("Wallride")))
         {
             if (hit.collider == curWallRide.collider)
             {
@@ -681,7 +724,7 @@ public class SurfController : MonoBehaviour
 
         // front
         if (!collisionActive || baseVelocity + additionalVelocity == 0) { return; }
-        Collider[] wallsHitFront = Physics.OverlapBox(transform.position + transform.forward * 2, frontBox / 2, transform.rotation);
+        Collider[] wallsHitFront = Physics.OverlapBox(transform.position + transform.forward * 2, frontBox.boxSize / 2, transform.rotation);
         foreach (Collider coll in wallsHitFront)
         {
             CollideObject collided;
@@ -750,11 +793,15 @@ public class SurfController : MonoBehaviour
         // grind detect box
         Gizmos.matrix = Matrix4x4.TRS(transform.position - new Vector3(0, grindDetectBox.y / 2), transform.rotation, grindDetectBox);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
-        // head collision box
-        Gizmos.matrix = Matrix4x4.TRS(transform.position + new Vector3(0, 2.75f, 0), transform.rotation, headBox);
+        // player collision box
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + playerBox.RelativeBoxPosition(transform), transform.rotation, playerBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
         // front collision box
-        Gizmos.matrix = Matrix4x4.TRS(transform.position + transform.forward * 2, transform.rotation, frontBox);
+        //Gizmos.matrix = Matrix4x4.TRS(transform.position + transform.forward * 2, transform.rotation, frontBox);
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + frontBox.RelativeBoxPosition(transform), transform.rotation, frontBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+
     }
+
+
 }
