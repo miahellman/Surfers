@@ -9,6 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Vignette Overlay
   m_Shader: {fileID: 4800000, guid: 16e4a04bd3d9c7941906e69d364de610, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -17,6 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -59,10 +62,10 @@ Material:
     - _Width: 0.45
     - _intensity: 1
     - _resolution: 128
-    - _saturation: 0.75
+    - _saturation: 1
     - _steps: 7.41
-    - _vr: 0.79
-    - _vs: 0.528
+    - _vr: 0.731
+    - _vs: 0.171
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _color1: {r: 0.059999965, g: 0.21999997, b: 0.059999965, a: 1}

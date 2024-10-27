@@ -9,6 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Lens Fisheye Distortion
   m_Shader: {fileID: 4800000, guid: ded0de8f8cc10475fbef0ec5ac939fa9, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
@@ -17,6 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -27,8 +30,8 @@ Material:
     m_Ints: []
     m_Floats:
     - _cubicDist: 0.24
-    - _distortion: -0.25
+    - _distortion: 0.44
     - _intensity: 1.524
-    - _scale: 1
+    - _scale: 0.91
     m_Colors: []
   m_BuildTextureStacks: []
