@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Tricks;
 
 public class BoardGraphics : MonoBehaviour
 {
@@ -52,10 +53,12 @@ public class BoardGraphics : MonoBehaviour
                 if (rotValue == targetRot)
                 {
                     flipState = FlipState.IDLE;
+                    rotValue = 0;
                 }
                 break;
             case FlipState.IDLE:
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0);
+                rotValue = 0;
                 break;
             case FlipState.FAILED:
                 //if (FindObjectOfType<SurfController>().IsGrounded())
@@ -101,8 +104,17 @@ public class BoardGraphics : MonoBehaviour
         // stop flip
         if (flipping && !active)
         {
+            print("stopped flip");
             adjustDir = -Mathf.Sign(flipValue);
             targetRot = Mathf.Round(rotValue / 360) * 360; // nearest multiple of 360
+            if (CheckSuccess())
+            {
+                int rotations = Mathf.Abs(Mathf.RoundToInt(targetRot / 360));
+                print(rotations);
+                Trick trick = TrickManager.instance.kickflip;
+                ScoreManager.instance.ScoreTrick(trick, trick.baseScore * rotations);
+            }
+
             //if (CheckSuccess())
             //{
             //    flipState = FlipState.ADJUSTING;
@@ -119,6 +131,7 @@ public class BoardGraphics : MonoBehaviour
         // start flip
         else if (!flipping && active) 
         {
+            print("started flip");
             flipState = FlipState.FLIPPING;
             flipping = true;
         }

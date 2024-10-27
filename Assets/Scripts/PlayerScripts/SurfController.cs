@@ -71,13 +71,14 @@ public class SurfController : MonoBehaviour
     Collider[] grindCollidersHit;
     Vector3 grindDir;
 
-    [Header("Collision Boxes")]
-    [SerializeField] CollisionBox playerBox;
+    [Header("Collision")]
+    [SerializeField] CollisionBox characterBox;
     [SerializeField] CollisionBox frontBox;
-    [SerializeField] CollisionBox collisionBox;
-    [SerializeField] Vector3 headBox = new Vector3(1.5f, 0.5f, 2);
+    [SerializeField] CollisionBox boardBox;
     // for checking for a collider that can't be scaled in front of us
     Collider validCollider;
+    Vector3 lastPosition; // for checking collision
+    bool[] colliding = { false, false, false };
 
     // wallride
     [Header("Wallriding")]
@@ -547,7 +548,6 @@ public class SurfController : MonoBehaviour
 
     void ProcessWallrideMovement()
     {
-
         rb.velocity = transform.forward * (baseVelocity + additionalVelocity);
 
         Quaternion initTargetRot = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
@@ -569,7 +569,7 @@ public class SurfController : MonoBehaviour
         rb.angularVelocity = yaw * transform.up;
 
         RaycastHit hit;
-        if (rotDist > 5)
+        if (rotDist > 10)
         {
             rb.rotation = initSlerpedRot;
             //transform.position =  + (transform.up * hoverHeight);
@@ -706,7 +706,6 @@ public class SurfController : MonoBehaviour
 
     void CheckCollision()
     {
-
         RaycastHit objectInFront;
         if (Physics.SphereCast(transform.position - transform.forward, 1.5f, transform.forward, out objectInFront, 3))
         {
@@ -723,8 +722,8 @@ public class SurfController : MonoBehaviour
         }
 
         // front
-        if (!collisionActive || baseVelocity + additionalVelocity == 0) { return; }
-        Collider[] wallsHitFront = Physics.OverlapBox(transform.position + transform.forward * 2, frontBox.boxSize / 2, transform.rotation);
+        //if (!collisionActive || baseVelocity + additionalVelocity == 0) { return; }
+        Collider[] wallsHitFront = Physics.OverlapBox(transform.position + frontBox.RelativeBoxPosition(transform), frontBox.boxSize / 2, transform.rotation);
         foreach (Collider coll in wallsHitFront)
         {
             CollideObject collided;
@@ -732,8 +731,8 @@ public class SurfController : MonoBehaviour
             {
                 if (coll == validCollider)
                 {
-                    Vector3 dir = (transform.position - collided.transform.position).normalized;
-                    dir.y = 0;
+                    Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
+                    Vector3 dir = (lastPosition - collPoint).normalized;
                     dir += -transform.forward; // give a little extra push in the direct opposite forward velocity
                     isSpinningOut = true;
                     spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier));
@@ -741,21 +740,53 @@ public class SurfController : MonoBehaviour
                     // spins the player graphics
                     spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
                     spinOutRate = 1440;
-                    curSpinOutOffset = spinOutRate / 2 * spinOutDir; // inital 'force'
+                    curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
                 }
             }
         }
 
-        // head
-        Collider[] wallsHitHead = Physics.OverlapBox(transform.position + new Vector3(0, 2.75f, 0), new Vector3(0.75f, 0.25f, 1f), transform.rotation);
-        foreach (Collider coll in wallsHitHead)
+        // character
+        Collider[] wallsHitCharacter = Physics.OverlapBox(transform.position + characterBox.RelativeBoxPosition(transform), characterBox.boxSize / 2, transform.rotation);
+        foreach (Collider coll in wallsHitCharacter)
         {
             CollideObject collided;
             if (coll.TryGetComponent<CollideObject>(out collided))
             {
-                //jumpVelocity *= -1;
+                Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
+                Vector3 dir = (lastPosition - collPoint).normalized;
+                //dir += -transform.forward;
+                transform.position = lastPosition;
+                isSpinningOut = true;
+                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 3));
+
+                // spins the player graphics
+                spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
+                spinOutRate = 1440;
+                curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
             }
         }
+
+        // board
+        Collider[] wallsHitBoard = Physics.OverlapBox(transform.position + boardBox.RelativeBoxPosition(transform), boardBox.boxSize / 2, transform.rotation);
+        foreach (Collider coll in wallsHitBoard)
+        {
+            CollideObject collided;
+            if (coll.TryGetComponent<CollideObject>(out collided))
+            {
+                Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
+                Vector3 dir = (lastPosition - collPoint).normalized;
+                //dir += -transform.forward;
+                transform.position = lastPosition;
+                isSpinningOut = true;
+                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 3));
+
+                // spins the player graphics
+                spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
+                spinOutRate = 1440;
+                curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
+            }
+        }
+        lastPosition = transform.position;
     }
 
     #region PROPERTY GETTERS
@@ -793,14 +824,16 @@ public class SurfController : MonoBehaviour
         // grind detect box
         Gizmos.matrix = Matrix4x4.TRS(transform.position - new Vector3(0, grindDetectBox.y / 2), transform.rotation, grindDetectBox);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
-        // player collision box
-        Gizmos.matrix = Matrix4x4.TRS(transform.position + playerBox.RelativeBoxPosition(transform), transform.rotation, playerBox.boxSize);
+        // character collision box
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + characterBox.RelativeBoxPosition(transform), transform.rotation, characterBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
         // front collision box
         //Gizmos.matrix = Matrix4x4.TRS(transform.position + transform.forward * 2, transform.rotation, frontBox);
         Gizmos.matrix = Matrix4x4.TRS(transform.position + frontBox.RelativeBoxPosition(transform), transform.rotation, frontBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
-
+        // board collision box
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + boardBox.RelativeBoxPosition(transform), transform.rotation, boardBox.boxSize);
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
     }
 
 
