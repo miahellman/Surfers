@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Tricks;
 
 public class SurfController : MonoBehaviour
 {
@@ -75,6 +76,7 @@ public class SurfController : MonoBehaviour
     [SerializeField] CollisionBox characterBox;
     [SerializeField] CollisionBox frontBox;
     [SerializeField] CollisionBox boardBox;
+    [SerializeField] float frontCheckDist = 3;
     // for checking for a collider that can't be scaled in front of us
     Collider validCollider;
     Vector3 lastPosition; // for checking collision
@@ -187,9 +189,10 @@ public class SurfController : MonoBehaviour
                         //transform.position = new Vector3(transform.position.x, curWallRide.point.y + hoverHeight, transform.position.z);
                         transform.position = attachPoint;
                         graphics.transform.localEulerAngles = Vector3.zero;
-                        //Time.timeScale = 0;
                         startRot = transform.rotation;
                         rb.angularVelocity = Vector3.zero;
+
+                        ScoreManager.instance.StartTrick(TrickManager.Wallride);
 
                         movementState = MovementState.WALLRIDE;
                     }
@@ -225,6 +228,7 @@ public class SurfController : MonoBehaviour
                     Vector3 closestPoint = currentGrind.GetComponent<Collider>().ClosestPoint(transform.position);
                     transform.position = new Vector3(closestPoint.x, closestPoint.y + 1.5f, closestPoint.z);
                     movementState = MovementState.GRIND;
+                    ScoreManager.instance.StartTrick(TrickManager.Grind);
                 }
                 break;
             case MovementState.GRIND:
@@ -534,6 +538,7 @@ public class SurfController : MonoBehaviour
             currentGrind = null;
             baseVelocity = maxSpeed / 4; // a little push forward
             jumpVelocity = Mathf.Sqrt(jumpForce / 2 * gravityValue);
+            ScoreManager.instance.StopTrick();
         }
 
         // if let grind button go or jump, stop grind
@@ -543,6 +548,7 @@ public class SurfController : MonoBehaviour
             currentGrind.HighlightColor(false);
             currentGrind = null;
             jumpVelocity = Mathf.Sqrt(jumpForce / 2 * gravityValue);
+            ScoreManager.instance.StopTrick();
         }
     }
 
@@ -594,6 +600,7 @@ public class SurfController : MonoBehaviour
             wallRideInputActive = false;
             transform.position += transform.forward * 3;
             movementState = MovementState.STANDARD;
+            ScoreManager.instance.StopTrick();
             //rb.rotation = Quaternion.Slerp(transform.rotation, startRot, floorRotSpeed * Time.deltaTime);
         }
 
@@ -605,6 +612,7 @@ public class SurfController : MonoBehaviour
             rb.rotation = Quaternion.Euler(new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0)); ;
             wallRideInputActive = false;
             movementState = MovementState.STANDARD;
+            ScoreManager.instance.StopTrick();
         }
 
         RaycastHit groundHit;
@@ -674,7 +682,7 @@ public class SurfController : MonoBehaviour
             }
         }
         canGrind = false;
-        if (currentGrind != null) { currentGrind.HighlightColor(false); movementState = MovementState.STANDARD; }
+        if (currentGrind != null) { currentGrind.HighlightColor(false); movementState = MovementState.STANDARD; ScoreManager.instance.StopTrick(); }
         currentGrind = null;
         return false;
     }
@@ -707,7 +715,7 @@ public class SurfController : MonoBehaviour
     void CheckCollision()
     {
         RaycastHit objectInFront;
-        if (Physics.SphereCast(transform.position - transform.forward, 1.5f, transform.forward, out objectInFront, 3))
+        if (Physics.SphereCast(transform.position - transform.forward, 1.5f, transform.forward, out objectInFront, frontCheckDist))
         {
             float dotProduct = Vector3.Dot(transform.up, objectInFront.normal);
             if (dotProduct < dotTolerance)
@@ -757,7 +765,7 @@ public class SurfController : MonoBehaviour
                 //dir += -transform.forward;
                 transform.position = lastPosition;
                 isSpinningOut = true;
-                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 3));
+                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 5));
 
                 // spins the player graphics
                 spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
@@ -778,7 +786,7 @@ public class SurfController : MonoBehaviour
                 //dir += -transform.forward;
                 transform.position = lastPosition;
                 isSpinningOut = true;
-                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 3));
+                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 5));
 
                 // spins the player graphics
                 spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
@@ -816,7 +824,7 @@ public class SurfController : MonoBehaviour
         Debug.DrawRay(transform.position, transform.right * wallRideDist, Color.red);
         Debug.DrawRay(transform.position, -transform.right * wallRideDist, Color.red);
         // forward collision spherecast
-        Gizmos.DrawWireSphere(transform.position + (transform.forward * 3), 1.5f);
+        Gizmos.DrawWireSphere(transform.position + (transform.forward * frontCheckDist), 1.5f);
         //Gizmos.DrawWireSphere(transform.position - transform.forward, 1.5f);
         
 

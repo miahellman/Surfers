@@ -5,6 +5,7 @@ using UnityEngine;
 public class ScreenShake : MonoBehaviour
 {
     // I should really change this, it's framerate dependent
+    // nvm i just put it in FixedUpdate lol
 
     [SerializeField] int shakeSpeed = 2; // how many frames will a single shake last for
 
@@ -24,7 +25,7 @@ public class ScreenShake : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         if (shaking)
         {

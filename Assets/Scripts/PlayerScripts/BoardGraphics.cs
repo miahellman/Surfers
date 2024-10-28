@@ -50,7 +50,7 @@ public class BoardGraphics : MonoBehaviour
                 rotValue = Mathf.LerpAngle(rotValue, adjustDir * targetRot, adjustSpeed * Time.deltaTime);
                 //rotValue += adjustDir * 100 * Time.deltaTime;
                 transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, rotValue);
-                if (rotValue == targetRot)
+                if (Mathf.Abs(rotValue - targetRot) <= 5)
                 {
                     flipState = FlipState.IDLE;
                     rotValue = 0;
@@ -104,14 +104,12 @@ public class BoardGraphics : MonoBehaviour
         // stop flip
         if (flipping && !active)
         {
-            print("stopped flip");
             adjustDir = -Mathf.Sign(flipValue);
             targetRot = Mathf.Round(rotValue / 360) * 360; // nearest multiple of 360
             if (CheckSuccess())
             {
                 int rotations = Mathf.Abs(Mathf.RoundToInt(targetRot / 360));
-                print(rotations);
-                Trick trick = TrickManager.instance.kickflip;
+                Trick trick = TrickManager.Kickflip;
                 ScoreManager.instance.ScoreTrick(trick, trick.baseScore * rotations);
             }
 
@@ -131,7 +129,6 @@ public class BoardGraphics : MonoBehaviour
         // start flip
         else if (!flipping && active) 
         {
-            print("started flip");
             flipState = FlipState.FLIPPING;
             flipping = true;
         }

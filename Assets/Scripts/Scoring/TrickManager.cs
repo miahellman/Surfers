@@ -6,16 +6,22 @@ namespace Tricks
 {
     public class TrickManager : MonoBehaviour
     {
-        public static TrickManager instance;
-
         [SerializeField] public Trick kickflip;
         [SerializeField] public Trick grind;
         [SerializeField] public Trick airTime;
         [SerializeField] public Trick wallride;
 
+        public static Trick Kickflip;
+        public static Trick Grind;
+        public static Trick AirTime;
+        public static Trick Wallride;
+
         private void Start()
         {
-            instance = this;
+            Kickflip = kickflip;
+            Grind = grind;
+            AirTime = airTime;
+            Wallride = wallride;
         }
     }
 
