@@ -64,17 +64,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   kickflip:
     trickName: KICKFLIP
-    baseScore: 20
+    baseScore: 100
     durationTrick: 0
   grind:
     trickName: GRIND
-    baseScore: 20
+    baseScore: 100
     durationTrick: 1
   airTime:
     trickName: AIRTIME
-    baseScore: 20
+    baseScore: 100
     durationTrick: 1
   wallride:
     trickName: WALLRIDE
-    baseScore: 20
+    baseScore: 100
     durationTrick: 1

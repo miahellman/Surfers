@@ -273,6 +273,7 @@ public class SurfController : MonoBehaviour
         }
 
         RaycastHit hit;
+        #region arccast
         //if (arcCast.ArcCast(transform.position, transform.rotation, arcCast.arcAngle, groundedDist, arcCast.arcResolution, floorRaycastLayers, out hit) && jumpVelocity <= 0)
         //{
         //    float dotProduct = Vector3.Dot(transform.up, hit.normal);
@@ -305,31 +306,51 @@ public class SurfController : MonoBehaviour
         //    }
 
         //}
+        #endregion
         if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist, floorRaycastLayers) && jumpVelocity <= 0)
         {
             float dotProduct = Vector3.Dot(transform.up, hit.normal);
 
-            //And then this is where we just filter out any surfaces that are too steep.
-            if (dotProduct > dotTolerance)
+            RaycastHit secondHit;
+            if (Physics.Raycast(rb.position + transform.up, -transform.up, out secondHit, groundedDist + 1, floorRaycastLayers))
             {
-                // hit the ground
-                transform.position = new Vector3(transform.position.x, hit.point.y + hoverHeight, transform.position.z);
-                isGrounded = true;
-                jumpVelocity = 0;
+                if (dotProduct > dotTolerance)
+                {
+                    Vector3 difference = (rb.position - secondHit.point);
 
-                // adjust for surface rotation
-                Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
-                Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
-                rb.rotation = slerpedRot;
-            }
 
-            // if mid flip when hitting ground
-            if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
-            {
-                jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
-                baseVelocity *= 0.3f;
-                additionalVelocity *= 0.3f;
+                    rb.position = secondHit.point + difference.normalized * hoverHeight;
+                    isGrounded = true;
+                    jumpVelocity = 0;
+
+                    // adjust for surface rotation
+                    Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+                    Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
+                    rb.rotation = slerpedRot;
+
+                    // if mid flip when hitting ground
+                    if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
+                    {
+                        jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
+                        baseVelocity *= 0.3f;
+                        additionalVelocity *= 0.3f;
+                    }
+
+                }
             }
+            //    //And then this is where we just filter out any surfaces that are too steep.
+            //if (dotProduct > dotTolerance)
+            //{
+            //    // hit the ground
+            //    transform.position = new Vector3(transform.position.x, hit.point.y + hoverHeight, transform.position.z);
+            //    isGrounded = true;
+            //    jumpVelocity = 0;
+
+            //    // adjust for surface rotation
+            //    Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+            //    Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
+            //    rb.rotation = slerpedRot;
+            //}
         }
         else
         {
