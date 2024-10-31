@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Wall
   - Abyss
+  - Selectable
   layers:
   - Default
   - TransparentFX

@@ -1,60 +1,72 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 public class CollisionOutline : MonoBehaviour
 {
-    // Outline object
-    private Renderer outlinedObject;
+    [Header("Object Outline & Shader Materials")]
+    //outline object
+    [SerializeField] Renderer OutlinedObject;
+    //materials for outline vs no outline
+    [SerializeField] Material WriteObject;
+    [SerializeField] Material ApplyOutline;
 
-    // Materials for outline vs no outline
-    public Material WriteObject;
-    public Material ApplyOutline;
+    [Header("Player Transform & Raycasts")]
+    [SerializeField] Transform playerTransform; // Reference to the player's transform
+    [SerializeField] float raycastDistance = 2f; // Maximum distance for the raycast
 
-    // Triggered when the player collides with a selectable object
-    private void OnTriggerEnter(Collider other)
+    private void Update()
     {
-        // Check if the collided object is tagged "Selectable"
-        if (other.CompareTag("Selectable"))
+        // Shoot a ray forward from the player's position
+        Ray ray = new Ray(playerTransform.position, playerTransform.forward);
+        RaycastHit hit;
+
+        // Check if the ray hits an object within the specified distance
+        if (Physics.Raycast(ray, out hit, raycastDistance))
         {
-            outlinedObject = other.GetComponent<Renderer>();
-            Debug.Log("Collided with selectable object");
+            if (hit.collider.CompareTag("selectable"))
+            {
+                // Assign the hit object's renderer to outlinedObject if it has one
+                OutlinedObject = hit.collider.GetComponent<Renderer>();
+                // Object with "selectable" tag is hit
+                // Place your code here to handle the selectable object, e.g., highlight, select, etc.
+                Debug.Log("Selectable object hit: " + hit.collider.name);
+            }
+            
         }
+        else
+        {
+            // Clear the outlinedObject if no object is hit
+            OutlinedObject = null;
+        }
+        Debug.DrawRay(playerTransform.position, playerTransform.forward * raycastDistance, Color.blue);
+
     }
 
-    // Triggered when the player exits collision with a selectable object
-    private void OnTriggerExit(Collider other)
+    void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
-        // If exiting a selectable object, remove the outline
-        if (other.CompareTag("Selectable"))
-        {
-            outlinedObject = null;
-            Debug.Log("Exited selectable object");
-        }
-    }
-
-    // Called after all rendering is complete, draws the outline
-    private void OnRenderImage(RenderTexture source, RenderTexture destination)
-    {
-        // Setup CommandBuffer for rendering
+        //setup stuff
         var commands = new CommandBuffer();
+
+        //create selection buffer
         int selectionBuffer = Shader.PropertyToID("_SelectionBuffer");
         commands.GetTemporaryRT(selectionBuffer, source.descriptor);
-
-        // Render selection buffer
+        //render selection buffer
         commands.SetRenderTarget(selectionBuffer);
         commands.ClearRenderTarget(true, true, Color.clear);
-
-        // Draw outline if an object is selected
-        if (outlinedObject != null)
+        //draws outline if object is selected
+        if (OutlinedObject != null)
         {
-            commands.DrawRenderer(outlinedObject, WriteObject);
+            commands.DrawRenderer(OutlinedObject, WriteObject);
         }
-
-        // Apply everything and clean up in CommandBuffer
+        //apply everything and clean up in commandbuffer
         commands.Blit(source, destination, ApplyOutline);
         commands.ReleaseTemporaryRT(selectionBuffer);
 
-        // Execute and clean up CommandBuffer itself
+
+        //execute and clean up commandbuffer itself
         Graphics.ExecuteCommandBuffer(commands);
         commands.Dispose();
     }
