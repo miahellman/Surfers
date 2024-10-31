@@ -80,7 +80,6 @@ public class ScoreManager : MonoBehaviour
     {
         yield return new WaitForSeconds(maxDownTime);
         setActive = false;
-        print("set over");
         ScoreSet();
     }
 

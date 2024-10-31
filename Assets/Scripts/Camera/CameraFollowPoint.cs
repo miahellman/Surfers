@@ -24,10 +24,12 @@ public class CameraFollowPoint : MonoBehaviour
         //float h = 4 * Input.GetAxis("Mouse X");
         //pointToRotate.Rotate(0, h, 0);
 
-        transform.position = Vector3.Lerp(transform.position, pointToFollow.position + offset, 0.4f);
+        transform.position = Vector3.Lerp(transform.position, pointToFollow.position + offset, 0.25f);
         float rotX = Mathf.LerpAngle(transform.eulerAngles.x, pointToFollow.eulerAngles.x, 0.065f);
         float rotY = Mathf.LerpAngle(transform.eulerAngles.y, pointToFollow.eulerAngles.y, 0.065f);
-        transform.rotation = Quaternion.Euler(new Vector3(rotX, rotY, 0));
+        //transform.rotation = Quaternion.Euler(new Vector3(rotX, rotY, 0));
+        Quaternion r = Quaternion.Euler(new Vector3(pointToFollow.eulerAngles.x, pointToFollow.eulerAngles.y, 0));
+        transform.rotation = Quaternion.Slerp(transform.rotation, r, 0.065f);
     }
 
     void Update()

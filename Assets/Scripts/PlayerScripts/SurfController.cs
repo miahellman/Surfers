@@ -80,7 +80,7 @@ public class SurfController : MonoBehaviour
     // for checking for a collider that can't be scaled in front of us
     Collider validCollider;
     Vector3 lastPosition; // for checking collision
-    bool[] colliding = { false, false, false };
+    LastGroundPoint lastGroundPoint = new LastGroundPoint();
 
     // wallride
     [Header("Wallriding")]
@@ -128,7 +128,7 @@ public class SurfController : MonoBehaviour
     float spinOutRate = 0;
     int spinOutDir;
 
-    enum MovementState { STANDARD, GRIND, WALLRIDE };
+    public enum MovementState { STANDARD, GRIND, WALLRIDE };
     MovementState movementState = MovementState.STANDARD;
 
     // Start is called before the first frame update
@@ -166,6 +166,7 @@ public class SurfController : MonoBehaviour
                     {
                         // start wallride
 
+                        float awayDir = 1; // used to set camera and character rotation based on which side the wall is on
                         Vector3 attachPoint;
                         // TODO if wall on left and right, need to choose which one is closer, OR just dont design level like that...
                         if (wallLeft) 
@@ -175,6 +176,7 @@ public class SurfController : MonoBehaviour
                             //transform.position = attachPoint;
                             //wallrideDir = Quaternion.AngleAxis(-90, Vector3.up) * leftWallHit.normal;
                             attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + transform.right;
+                            awayDir = -1;
                         }
                         else
                         { 
@@ -183,6 +185,7 @@ public class SurfController : MonoBehaviour
                             //transform.position = attachPoint;
                             //wallrideDir = Quaternion.AngleAxis(90, Vector3.up) * rightWallHit.normal;
                             attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + -transform.right;
+                            awayDir = 1;
                         }
 
                         //rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
@@ -193,6 +196,7 @@ public class SurfController : MonoBehaviour
                         rb.angularVelocity = Vector3.zero;
 
                         ScoreManager.instance.StartTrick(TrickManager.Wallride);
+                        CameraControl.instance.MovePointView(new Vector3(0, 7, 4.5f), new Vector3(30, 0, 0));
 
                         movementState = MovementState.WALLRIDE;
                     }
@@ -232,6 +236,7 @@ public class SurfController : MonoBehaviour
                 }
                 break;
             case MovementState.GRIND:
+                spinOutVector = Vector3.zero;
                 if (grindCollidersHit.Length <= 0)
                 {
                     currentGrind = null;
@@ -240,6 +245,7 @@ public class SurfController : MonoBehaviour
                 CheckForGrind();
                 break;
             case MovementState.WALLRIDE:
+                spinOutVector = Vector3.zero;
                 ProcessWallrideMovement();
                 break;
         }
@@ -273,41 +279,7 @@ public class SurfController : MonoBehaviour
         }
 
         RaycastHit hit;
-        #region arccast
-        //if (arcCast.ArcCast(transform.position, transform.rotation, arcCast.arcAngle, groundedDist, arcCast.arcResolution, floorRaycastLayers, out hit) && jumpVelocity <= 0)
-        //{
-        //    float dotProduct = Vector3.Dot(transform.up, hit.normal);
-
-        //    //And then this is where we just filter out any surfaces that are too steep.
-        //    if (dotProduct > dotTolerance)
-        //    {
-        //        RaycastHit straightDownHit;
-        //        if (Physics.Raycast(transform.position, -transform.up, out straightDownHit, groundedDist + 10, floorRaycastLayers) && jumpVelocity <= 0)
-        //        {
-        //            transform.position = new Vector3(transform.position.x, straightDownHit.point.y + hoverHeight, transform.position.z);
-        //        }
-
-        //        // hit the ground
-        //        isGrounded = true;
-        //        jumpVelocity = 0;
-
-        //        // adjust for surface rotation
-        //        Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
-        //        Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
-        //        rb.rotation = slerpedRot;
-        //    }
-
-        //    // if mid flip when hitting ground
-        //    if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
-        //    {
-        //        jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
-        //        baseVelocity *= 0.3f;
-        //        additionalVelocity *= 0.3f;
-        //    }
-
-        //}
-        #endregion
-        if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist, floorRaycastLayers) && jumpVelocity <= 0)
+        if (arcCast.ArcCast(transform.position, transform.rotation, arcCast.arcAngle, groundedDist, arcCast.arcResolution, floorRaycastLayers, out hit) && jumpVelocity <= 0)
         {
             float dotProduct = Vector3.Dot(transform.up, hit.normal);
 
@@ -317,7 +289,6 @@ public class SurfController : MonoBehaviour
                 if (dotProduct > dotTolerance)
                 {
                     Vector3 difference = (rb.position - secondHit.point);
-
 
                     rb.position = secondHit.point + difference.normalized * hoverHeight;
                     isGrounded = true;
@@ -336,22 +307,46 @@ public class SurfController : MonoBehaviour
                         additionalVelocity *= 0.3f;
                     }
 
+                    lastGroundPoint.pos = transform.position;
+                    lastGroundPoint.rot = transform.rotation;
                 }
             }
-            //    //And then this is where we just filter out any surfaces that are too steep.
-            //if (dotProduct > dotTolerance)
-            //{
-            //    // hit the ground
-            //    transform.position = new Vector3(transform.position.x, hit.point.y + hoverHeight, transform.position.z);
-            //    isGrounded = true;
-            //    jumpVelocity = 0;
 
-            //    // adjust for surface rotation
-            //    Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
-            //    Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
-            //    rb.rotation = slerpedRot;
-            //}
         }
+        #region plain raycast
+        //if (Physics.Raycast(transform.position, -transform.up, out hit, groundedDist, floorRaycastLayers) && jumpVelocity <= 0)
+        //{
+        //    float dotProduct = Vector3.Dot(transform.up, hit.normal);
+
+        //    RaycastHit secondHit;
+        //    if (Physics.Raycast(rb.position + transform.up, -transform.up, out secondHit, groundedDist + 1, floorRaycastLayers))
+        //    {
+        //        if (dotProduct > dotTolerance)
+        //        {
+        //            Vector3 difference = (rb.position - secondHit.point);
+
+
+        //            rb.position = secondHit.point + difference.normalized * hoverHeight;
+        //            isGrounded = true;
+        //            jumpVelocity = 0;
+
+        //            // adjust for surface rotation
+        //            Quaternion targetRot = Quaternion.FromToRotation(transform.up, hit.normal) * transform.rotation;
+        //            Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
+        //            rb.rotation = slerpedRot;
+
+        //            // if mid flip when hitting ground
+        //            if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
+        //            {
+        //                jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
+        //                baseVelocity *= 0.3f;
+        //                additionalVelocity *= 0.3f;
+        //            }
+
+        //        }
+        //    }
+        //}
+        #endregion
         else
         {
             isGrounded = false;
@@ -487,7 +482,8 @@ public class SurfController : MonoBehaviour
         //    else { turnVelocity += turnAccel * Time.deltaTime; }
         //}
         //if (isBreaking) { turnVelocity -= breakTurnDecel * Time.deltaTime; }
-        turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed);
+        if (isGrounded) { turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed); }
+        else { turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed * 0.75f); }
 
         if (isBreaking) { yaw = turnVelocity * breakTurnDir; }
         else { yaw = turnVelocity * horInput; }
@@ -609,19 +605,18 @@ public class SurfController : MonoBehaviour
                 Quaternion slerpedRot = Quaternion.Slerp(transform.rotation, targetRot, floorRotSpeed * Time.deltaTime);
                 rb.rotation = slerpedRot;
                 //transform.position = transform.position + (transform.up * hoverHeight);
-                print("wall");
             }
         }
         else
         {
             // stop wallride
-            print("stop wallride");
             rb.angularVelocity = Vector3.zero;
             rb.rotation = startRot;
             wallRideInputActive = false;
             transform.position += transform.forward * 3;
             movementState = MovementState.STANDARD;
             ScoreManager.instance.StopTrick();
+            CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
             //rb.rotation = Quaternion.Slerp(transform.rotation, startRot, floorRotSpeed * Time.deltaTime);
         }
 
@@ -634,6 +629,7 @@ public class SurfController : MonoBehaviour
             wallRideInputActive = false;
             movementState = MovementState.STANDARD;
             ScoreManager.instance.StopTrick();
+            CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
         }
 
         RaycastHit groundHit;
@@ -641,13 +637,17 @@ public class SurfController : MonoBehaviour
         Vector3 groundDir;
         if (wallLeft) { groundDir = transform.right; }
         else { groundDir = -transform.right; }
-        if (Physics.Raycast(transform.position, groundDir, out groundHit, 1, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(transform.position, groundDir, out groundHit, 3, LayerMask.GetMask("Ground")))
         {
-            print("too close to ground");
-            Vector3 horizontalPush = new Vector3(transform.up.x, 0, transform.up.z) * 0.5f;
-            transform.position = new Vector3(transform.position.x, groundHit.point.y + hoverHeight, transform.position.z) + horizontalPush;
-            transform.rotation = Quaternion.FromToRotation(transform.up, groundHit.normal) * transform.rotation;
-            movementState = MovementState.STANDARD;
+            if (Vector3.Distance(transform.position, groundHit.point) <= 1)
+            {
+                Vector3 horizontalPush = new Vector3(transform.up.x, 0, transform.up.z) * 0.5f;
+                transform.position = new Vector3(transform.position.x, groundHit.point.y + hoverHeight, transform.position.z) + horizontalPush;
+                transform.rotation = Quaternion.FromToRotation(transform.up, groundHit.normal) * transform.rotation;
+                movementState = MovementState.STANDARD;
+                ScoreManager.instance.StopTrick();
+                CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
+            }  
         }
     }
 
@@ -760,6 +760,11 @@ public class SurfController : MonoBehaviour
             {
                 if (coll == validCollider)
                 {
+                    if (coll.gameObject.layer == LayerMask.GetMask("Ground"))
+                    {
+                        //spinOutVector = -Vector3.up
+                    }
+
                     Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
                     Vector3 dir = (lastPosition - collPoint).normalized;
                     dir += -transform.forward; // give a little extra push in the direct opposite forward velocity
@@ -770,6 +775,8 @@ public class SurfController : MonoBehaviour
                     spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
                     spinOutRate = 1440;
                     curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
+
+                    transform.position = lastPosition;
                 }
             }
         }
@@ -783,15 +790,24 @@ public class SurfController : MonoBehaviour
             {
                 Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
                 Vector3 dir = (lastPosition - collPoint).normalized;
-                //dir += -transform.forward;
-                transform.position = lastPosition;
-                isSpinningOut = true;
-                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 5));
+                if (jumpVelocity > 0) // if hitting head
+                {
+                    spinOutVector = dir * jumpVelocity * (spinOutMultiplier * 0.88f);
+                    print(spinOutVector);
+                }
+                else
+                {
+                    dir += dir;
+                    spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier));
 
-                // spins the player graphics
-                spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
-                spinOutRate = 1440;
-                curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
+                    // spins the player graphics
+                    spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
+                    spinOutRate = 1440;
+                    curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
+                }
+                isSpinningOut = true;
+                
+                transform.position = lastPosition;
             }
         }
 
@@ -802,17 +818,21 @@ public class SurfController : MonoBehaviour
             CollideObject collided;
             if (coll.TryGetComponent<CollideObject>(out collided))
             {
-                Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
-                Vector3 dir = (lastPosition - collPoint).normalized;
-                //dir += -transform.forward;
-                transform.position = lastPosition;
-                isSpinningOut = true;
-                spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier * 5));
+                if (coll == validCollider)
+                {
+                    Vector3 collPoint = coll.ClosestPointOnBounds(transform.position);
+                    Vector3 dir = (lastPosition - collPoint).normalized;
+                    dir += dir;
+                    isSpinningOut = true;
+                    spinOutVector = dir * Mathf.Min(maxSpinOutForce, ((baseVelocity + additionalVelocity) * spinOutMultiplier));
 
-                // spins the player graphics
-                spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
-                spinOutRate = 1440;
-                curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
+                    // spins the player graphics
+                    spinOutDir = Mathf.RoundToInt(Mathf.Sign(rb.angularVelocity.y));
+                    spinOutRate = 1440;
+                    curSpinOutOffset = spinOutRate / 2 * spinOutDir; // initial 'force'
+
+                    transform.position = lastPosition;
+                }
             }
         }
         lastPosition = transform.position;
@@ -820,21 +840,14 @@ public class SurfController : MonoBehaviour
 
     #region PROPERTY GETTERS
     // total forward velocity
-    public Vector3 ForwardVelocity()
-    {
-        return (baseVelocity + additionalVelocity) * transform.forward + spinOutVector;
-    }
+    public Vector3 ForwardVelocity() { return (baseVelocity + additionalVelocity) * transform.forward + spinOutVector; }
 
     // are we currently spinning out?
-    public bool IsSpinningOut()
-    {
-        return isSpinningOut;
-    }
+    public bool IsSpinningOut() { return isSpinningOut; }
 
-    public bool IsGrounded()
-    {
-        return isGrounded;
-    }
+    public bool IsGrounded() { return isGrounded; }
+
+    public MovementState GetMovementState() { return movementState; }
     #endregion
 
     private void OnDrawGizmosSelected()
@@ -865,5 +878,12 @@ public class SurfController : MonoBehaviour
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
     }
 
-
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Abyss")
+        {
+            transform.position = lastGroundPoint.pos;
+            transform.rotation = lastGroundPoint.rot;
+        }
+    }
 }

@@ -17,3 +17,9 @@ public class CollisionBox
         return relativeX + relativeY + relativeZ;
     }
 }
+
+public class LastGroundPoint
+{
+    public Vector3 pos;
+    public Quaternion rot;
+}

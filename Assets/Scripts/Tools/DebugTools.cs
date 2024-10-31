@@ -16,7 +16,7 @@ public class DebugTools : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(restartKey))
+        if (Input.GetButtonDown("Restart"))
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
