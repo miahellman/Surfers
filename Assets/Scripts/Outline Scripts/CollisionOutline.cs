@@ -26,7 +26,7 @@ public class CollisionOutline : MonoBehaviour
         // Check if the ray hits an object within the specified distance
         if (Physics.Raycast(ray, out hit, raycastDistance))
         {
-            if (hit.collider.CompareTag("selectable"))
+            if (hit.collider.CompareTag("Selectable"))
             {
                 // Assign the hit object's renderer to outlinedObject if it has one
                 OutlinedObject = hit.collider.GetComponent<Renderer>();
