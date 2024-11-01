@@ -76,6 +76,7 @@ public class SurfController : MonoBehaviour
     [SerializeField] CollisionBox characterBox;
     [SerializeField] CollisionBox frontBox;
     [SerializeField] CollisionBox boardBox;
+    [SerializeField] CollisionBox interactableBox;
     [SerializeField] float frontCheckDist = 3;
     // for checking for a collider that can't be scaled in front of us
     Collider validCollider;
@@ -87,6 +88,7 @@ public class SurfController : MonoBehaviour
     [Header("Wallriding")]
     [SerializeField] float wallRideDist = 2f;
     [SerializeField] float wallDismountForce = 75f;
+    [SerializeField] float maxWallrideAgleDiff = 30f;
     RaycastHit curWallRide;
     bool wallLeft;
     bool wallRight;
@@ -138,7 +140,7 @@ public class SurfController : MonoBehaviour
         board = GetComponentInChildren<BoardGraphics>();
         arcCast = GetComponent<ArcCastComponent>();
         graphics = transform.GetChild(0).gameObject;
-        outliner = GetComponent<Outliner>();
+        outliner = FindObjectOfType<Outliner>();
 
         //boostsAvailable = baseBoostAmount;
         //boostsText.text = "x" + (boostsAvailable + additionalBoosts);
@@ -152,10 +154,22 @@ public class SurfController : MonoBehaviour
     void Update()
     {
         BoostCooldown();
-        print(movementState);
+
         switch (movementState)
         {
             case MovementState.STANDARD:
+                Collider[] colliders = Physics.OverlapBox(transform.position + interactableBox.RelativeBoxPosition(transform), interactableBox.boxSize / 2, transform.rotation);
+                List<Renderer> interactables = new List<Renderer>();
+                foreach (Collider coll in colliders)
+                {
+                    if (coll.GetComponent<Interactable>() != null)
+                    {
+                        interactables.Add(coll.GetComponent<Renderer>());
+                    }
+                }
+                if (interactables.Count > 0) { outliner.SetObjects(interactables); }
+                else { outliner.ClearObjects(); }
+
                 ProcessStandardMovement();
                 CheckForGrind();
                 CheckCollision();
@@ -195,6 +209,7 @@ public class SurfController : MonoBehaviour
 
                         ScoreManager.instance.StartTrick(TrickManager.Wallride);
                         CameraControl.instance.MovePointView(new Vector3(0, 7, 4.5f), new Vector3(30, 0, 0));
+                        outliner.ClearObjects();
 
                         movementState = MovementState.WALLRIDE;
                     }
@@ -230,6 +245,7 @@ public class SurfController : MonoBehaviour
                     Vector3 closestPoint = currentGrind.GetComponent<Collider>().ClosestPoint(transform.position);
                     transform.position = new Vector3(closestPoint.x, closestPoint.y + 1.5f, closestPoint.z);
                     movementState = MovementState.GRIND;
+                    outliner.ClearObjects();
                     ScoreManager.instance.StartTrick(TrickManager.Grind);
                 }
                 break;
@@ -305,8 +321,11 @@ public class SurfController : MonoBehaviour
                         additionalVelocity *= 0.3f;
                     }
 
-                    lastGroundPoint.pos = transform.position;
-                    lastGroundPoint.rot = transform.rotation;
+                    if (secondHit.collider.tag == "Floor")
+                    {
+                        lastGroundPoint.pos = transform.position;
+                        lastGroundPoint.rot = transform.rotation;
+                    }
                 }
             }
 
@@ -630,28 +649,39 @@ public class SurfController : MonoBehaviour
             CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
         }
 
-        RaycastHit groundHit;
-        // too close to ground/edge of wall
-        Vector3 groundDir;
-        if (wallLeft) { groundDir = transform.right; }
-        else { groundDir = -transform.right; }
-        if (Physics.Raycast(transform.position, groundDir, out groundHit, 3, LayerMask.GetMask("Ground")))
-        {
-            if (Vector3.Distance(transform.position, groundHit.point) <= 1)
-            {
-                Vector3 horizontalPush = new Vector3(transform.up.x, 0, transform.up.z) * 0.5f;
-                transform.position = new Vector3(transform.position.x, groundHit.point.y + hoverHeight, transform.position.z) + horizontalPush;
-                transform.rotation = Quaternion.FromToRotation(transform.up, groundHit.normal) * transform.rotation;
-                movementState = MovementState.STANDARD;
-                ScoreManager.instance.StopTrick();
-                CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
-            }  
-        }
+        // raycast (more likely to steer through ground, because it doesn't raycast forward)
+        //RaycastHit groundHit;
+        //// too close to ground/edge of wall
+        //Vector3 groundDir;
+        //if (wallLeft) { groundDir = transform.right; }
+        //else { groundDir = -transform.right; }
+        //if (Physics.Raycast(transform.position, groundDir, out groundHit, 3, LayerMask.GetMask("Ground")))
+        //{
+        //    if (Vector3.Distance(transform.position, groundHit.point) <= 1)
+        //    {
+        //        Vector3 horizontalPush = new Vector3(transform.up.x, 0, transform.up.z) * 0.5f;
+        //        transform.position = new Vector3(transform.position.x, groundHit.point.y + hoverHeight, transform.position.z) + horizontalPush;
+        //        transform.rotation = Quaternion.FromToRotation(transform.up, groundHit.normal) * transform.rotation;
+        //        movementState = MovementState.STANDARD;
+        //        ScoreManager.instance.StopTrick();
+        //        CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
+        //    }  
+        //}
 
         Collider[] hitBoard = Physics.OverlapBox(transform.position + boardBox.RelativeBoxPosition(transform), boardBox.boxSize / 2, transform.rotation);
         foreach (Collider coll in hitBoard)
         {
-
+            // idk why LayerMask.GetMask("Ground") doesn't work
+            if (coll.gameObject.layer == 6)
+            {
+                Vector3 closest = coll.ClosestPointOnBounds(transform.position);
+                Vector3 horizontalPush = new Vector3(transform.up.x, 0, transform.up.z) * 2.5f;
+                transform.position = new Vector3(transform.position.x, closest.y + hoverHeight, transform.position.z) + horizontalPush;
+                transform.rotation = Quaternion.Euler(new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0));
+                movementState = MovementState.STANDARD;
+                ScoreManager.instance.StopTrick();
+                CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
+            }
         }
     }
 
@@ -701,7 +731,8 @@ public class SurfController : MonoBehaviour
                         canGrind = true;
                         grindDir = dir;
                         //currentGrind.HighlightColor(true);
-                        outliner.SetOutlineObject(currentGrind.gameObject);
+                        if (movementState == MovementState.GRIND) { outliner.ClearOutlineObject(); }
+                        else { outliner.SetOutlineObject(currentGrind.gameObject); }
                     }
                 }
                 return true;
@@ -718,17 +749,23 @@ public class SurfController : MonoBehaviour
         wallLeft = Physics.Raycast(transform.position, -transform.right, out leftWallHit, wallRideDist, LayerMask.GetMask("Wallride"));
         wallRight = Physics.Raycast(transform.position, transform.right, out rightWallHit, wallRideDist, LayerMask.GetMask("Wallride"));
 
+
+        float angleDiff;
         if (wallLeft) 
         { 
             leftWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
-            return true;
+            angleDiff = Vector3.Angle(leftWallHit.normal, transform.right);
+            if (angleDiff <= maxWallrideAgleDiff) { return true; }
+            else { return false; }
             //if (leftWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(leftWallHit.normal)) { return true; }
             //else { return false; } 
         }
         else if (wallRight) 
         { 
             rightWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
-            return true;
+            angleDiff = Vector3.Angle(rightWallHit.normal, -transform.right);
+            if (angleDiff <= maxWallrideAgleDiff) { return true; }
+            else { return false; }
             //if (rightWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(rightWallHit.normal)) { return true; }
             //else { return false; }
         }
@@ -879,6 +916,11 @@ public class SurfController : MonoBehaviour
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
         // board collision box
         Gizmos.matrix = Matrix4x4.TRS(transform.position + boardBox.RelativeBoxPosition(transform), transform.rotation, boardBox.boxSize);
+        Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+
+        // interactable detection box
+        Gizmos.color = Color.blue;
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + interactableBox.RelativeBoxPosition(transform), transform.rotation, interactableBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
     }
 

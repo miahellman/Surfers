@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GrindObject : MonoBehaviour
+public class GrindObject : Interactable
 {
     [Header("Grind Directions")]
     [SerializeField] public bool forward = false;

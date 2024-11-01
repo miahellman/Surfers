@@ -16,6 +16,12 @@ public class CollisionBox
 
         return relativeX + relativeY + relativeZ;
     }
+
+    public CollisionBox(Vector3 position, Vector3 size)
+    {
+        boxPosition = position;
+        boxSize = size;
+    }
 }
 
 public class LastGroundPoint

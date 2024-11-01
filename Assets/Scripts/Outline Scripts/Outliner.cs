@@ -6,11 +6,14 @@ using UnityEngine.Rendering;
 public class Outliner : MonoBehaviour
 {
     //outline object
-    public Renderer OutlinedObject;
+    public Renderer activeObject;
+    List<Renderer> outlineObjects = new List<Renderer>();
 
     //materials for outline vs no outline
-    public Material WriteObject;
-    public Material ApplyOutline;
+    [SerializeField] Material writeObject;
+    [SerializeField] Material applyOutline;
+    [SerializeField] Material activeOutline;
+    [SerializeField] Material testWrite;
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
@@ -22,13 +25,26 @@ public class Outliner : MonoBehaviour
         commands.SetRenderTarget(selectionBuffer);
         commands.ClearRenderTarget(true, true, Color.clear);
         //draws outline if object is selected
-        if (OutlinedObject != null)
+        //if (OutlinedObject != null)
+        //{
+        //    commands.DrawRenderer(OutlinedObject, writeObject);
+        //}
+        if (outlineObjects.Count > 0)
         {
-            commands.DrawRenderer(OutlinedObject, WriteObject);
-            print("test");
+            foreach (Renderer o in outlineObjects)
+            {
+                commands.DrawRenderer(o, writeObject);
+            }
         }
+
         //apply everything and clean up in commandbuffer
-        commands.Blit(source, destination, ApplyOutline);
+        commands.Blit(source, destination, applyOutline);
+
+        if (activeObject != null)
+        {
+            commands.DrawRenderer(activeObject, testWrite);
+        }
+        commands.Blit(source, destination, activeOutline);
         commands.ReleaseTemporaryRT(selectionBuffer);
 
         //execute and clean up commandbuffer itself
@@ -38,13 +54,21 @@ public class Outliner : MonoBehaviour
 
     public void SetOutlineObject(GameObject outlineObject)
     {
-        OutlinedObject = outlineObject.GetComponent<Renderer>();
-        //print(outlineObject.name);
+        activeObject = outlineObject.GetComponent<Renderer>();
     }
 
     public void ClearOutlineObject()
     {
-        OutlinedObject = null;
-        //print("outline object null");
+        activeObject = null;
+    }
+
+    public void SetObjects(List<Renderer> objects)
+    {
+        outlineObjects = objects;
+    }
+
+    public void ClearObjects()
+    {
+        outlineObjects.Clear();
     }
 }

@@ -7,6 +7,8 @@ TagManager:
   - Wall
   - Abyss
   - Selectable
+  - Floor
+  - Interactable
   layers:
   - Default
   - TransparentFX

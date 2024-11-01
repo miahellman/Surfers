@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WallrideObject : MonoBehaviour
+public class WallrideObject : Interactable
 {
     [Header("Ridable Normals")]
     [SerializeField] public bool forward = false;
