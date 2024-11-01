@@ -10,9 +10,28 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] float maxDownTime = 3; // how much time you have to do another trick before set is over
     [SerializeField] float setBonusPercent = 0.15f;
 
+    [Header("UI")]
     [SerializeField] TMP_Text trickNameText;
     [SerializeField] TMP_Text durTrickText;
     [SerializeField] TMP_Text overallScoreText;
+    [SerializeField] float fadeRate = 0.75f;
+    [Tooltip("Bottom to top (0 is newest trick)")][SerializeField] TMP_Text[] trickTexts;
+
+    //List<TrickListItem> trickList = new List<TrickListItem>();
+
+    TrickListItem[] trickList = { null, null, null };
+
+    public class TrickListItem
+    {
+        public string name;
+        public float alpha;
+
+        public TrickListItem(string trickName, float defaultAlpha)
+        {
+            name = trickName;
+            alpha = defaultAlpha;
+        }   
+    }
 
     public static ScoreManager instance;
 
@@ -42,6 +61,23 @@ public class ScoreManager : MonoBehaviour
 
             durTrickText.text = string.Format("{0} {1:0.00}", activeTrick.trickName, activeTrickTime);
         }
+
+        for (int i = 0; i < trickList.Length; i++)
+        {
+            if (trickList[i] != null)
+            {
+                trickTexts[i].text = trickList[i].name;
+                //trickList[i].alpha -= fadeRate * Time.deltaTime;
+
+                Color color = trickTexts[i].color;
+                trickTexts[i].color = new Color(color.r, color.g, color.b, trickList[i].alpha);
+            }
+            else
+            {
+                Color color = trickTexts[i].color;
+                trickTexts[i].color = new Color(color.r, color.g, color.b, 0);
+            }
+        }
     }
 
     public void StartTrick(Trick type)
@@ -70,10 +106,29 @@ public class ScoreManager : MonoBehaviour
     {
         if (resetCo != null) { StopCoroutine(resetCo); }
         resetCo = StartCoroutine(ResetSetTimer());
-        trickNameText.text = type.trickName;
+        //trickNameText.text = type.trickName;
         setScore += value;
         overallScore += value;
         overallScoreText.text = overallScore.ToString();
+
+        TrickListItem newItem = new TrickListItem(type.trickName, 1);
+
+        if (trickList[0] != null)
+        {
+            for (int i = trickTexts.Length; i > 0 ; i--)
+            {
+                // move items up
+                TrickListItem previousItem = trickList[i - 1];
+                if (i < trickTexts.Length) { trickList[i] = previousItem; }
+            }
+            trickList[0] = newItem;
+            trickTexts[0].GetComponent<Animation>().Play();
+        }
+        else
+        {
+            trickList[0] = newItem;
+            trickTexts[0].GetComponent<Animation>().Play();
+        }
     }
 
     IEnumerator ResetSetTimer()

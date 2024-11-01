@@ -81,6 +81,7 @@ public class SurfController : MonoBehaviour
     Collider validCollider;
     Vector3 lastPosition; // for checking collision
     LastGroundPoint lastGroundPoint = new LastGroundPoint();
+    Outliner outliner;
 
     // wallride
     [Header("Wallriding")]
@@ -94,7 +95,6 @@ public class SurfController : MonoBehaviour
     RaycastHit rightWallHit;
     Quaternion startRot;
     Coroutine wallrideInputCo;
-    Vector3 wallrideDir;
 
     BoardGraphics board;
     Rigidbody rb;
@@ -138,6 +138,7 @@ public class SurfController : MonoBehaviour
         board = GetComponentInChildren<BoardGraphics>();
         arcCast = GetComponent<ArcCastComponent>();
         graphics = transform.GetChild(0).gameObject;
+        outliner = GetComponent<Outliner>();
 
         //boostsAvailable = baseBoostAmount;
         //boostsText.text = "x" + (boostsAvailable + additionalBoosts);
@@ -151,7 +152,7 @@ public class SurfController : MonoBehaviour
     void Update()
     {
         BoostCooldown();
-
+        print(movementState);
         switch (movementState)
         {
             case MovementState.STANDARD:
@@ -166,7 +167,6 @@ public class SurfController : MonoBehaviour
                     {
                         // start wallride
 
-                        float awayDir = 1; // used to set camera and character rotation based on which side the wall is on
                         Vector3 attachPoint;
                         // TODO if wall on left and right, need to choose which one is closer, OR just dont design level like that...
                         if (wallLeft) 
@@ -176,7 +176,6 @@ public class SurfController : MonoBehaviour
                             //transform.position = attachPoint;
                             //wallrideDir = Quaternion.AngleAxis(-90, Vector3.up) * leftWallHit.normal;
                             attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + transform.right;
-                            awayDir = -1;
                         }
                         else
                         { 
@@ -185,7 +184,6 @@ public class SurfController : MonoBehaviour
                             //transform.position = attachPoint;
                             //wallrideDir = Quaternion.AngleAxis(90, Vector3.up) * rightWallHit.normal;
                             attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + -transform.right;
-                            awayDir = 1;
                         }
 
                         //rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
@@ -577,7 +575,7 @@ public class SurfController : MonoBehaviour
         Quaternion initSlerpedRot = Quaternion.Slerp(transform.rotation, initTargetRot, floorRotSpeed * 2f * Time.deltaTime);
         float rotDist = Vector3.Distance(initTargetRot.eulerAngles, initSlerpedRot.eulerAngles); // gets initial rotation, facing wall
 
-        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0 && !isBreaking)
+        if (Mathf.Abs(Input.GetAxis("Horizontal")) > 0)
         {
             if (turnVelocity < initTurnSpeed) { turnVelocity += initTurnAccel * Time.deltaTime; }
             else { turnVelocity += turnAccel * Time.deltaTime; }
@@ -649,6 +647,12 @@ public class SurfController : MonoBehaviour
                 CameraControl.instance.MovePointView(Vector3.zero, Vector3.zero);
             }  
         }
+
+        Collider[] hitBoard = Physics.OverlapBox(transform.position + boardBox.RelativeBoxPosition(transform), boardBox.boxSize / 2, transform.rotation);
+        foreach (Collider coll in hitBoard)
+        {
+
+        }
     }
 
     public void Boost(float targetVelocity, float accelRate)
@@ -696,14 +700,15 @@ public class SurfController : MonoBehaviour
                     {
                         canGrind = true;
                         grindDir = dir;
-                        currentGrind.HighlightColor(true);
+                        //currentGrind.HighlightColor(true);
+                        outliner.SetOutlineObject(currentGrind.gameObject);
                     }
                 }
                 return true;
             }
         }
         canGrind = false;
-        if (currentGrind != null) { currentGrind.HighlightColor(false); movementState = MovementState.STANDARD; ScoreManager.instance.StopTrick(); }
+        if (currentGrind != null) { outliner.ClearOutlineObject(); movementState = MovementState.STANDARD; ScoreManager.instance.StopTrick(); }
         currentGrind = null;
         return false;
     }
@@ -793,7 +798,6 @@ public class SurfController : MonoBehaviour
                 if (jumpVelocity > 0) // if hitting head
                 {
                     spinOutVector = dir * jumpVelocity * (spinOutMultiplier * 0.88f);
-                    print(spinOutVector);
                 }
                 else
                 {

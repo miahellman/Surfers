@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 public class DebugTools : MonoBehaviour
 {
-    [SerializeField] KeyCode restartKey = KeyCode.R;
+    //[SerializeField] KeyCode restartKey = KeyCode.R;
 
     // Start is called before the first frame update
     void Start()
