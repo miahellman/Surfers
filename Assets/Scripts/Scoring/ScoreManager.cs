@@ -9,6 +9,7 @@ public class ScoreManager : MonoBehaviour
 {
     [SerializeField] float maxDownTime = 3; // how much time you have to do another trick before set is over
     [SerializeField] float setBonusPercent = 0.15f;
+    [SerializeField] SpotInstance1[] spots;
 
     [Header("UI")]
     [SerializeField] TMP_Text trickNameText;
@@ -138,11 +139,28 @@ public class ScoreManager : MonoBehaviour
         ScoreSet();
     }
 
+    public void ForceStopSet()
+    {
+        StopCoroutine(resetCo);
+        setActive = false;
+        ScoreSet();
+    }
+
     void ScoreSet()
     {
         int setBonus = Mathf.FloorToInt(setScore * setBonusPercent);
         overallScore += setBonus;
         overallScoreText.text = overallScore.ToString();
         setScore = 0;
+    }
+
+    public int GetOverallScore()
+    {
+        return overallScore;
+    }
+
+    public SpotInstance1[] GetSpots()
+    {
+        return spots;
     }
 }

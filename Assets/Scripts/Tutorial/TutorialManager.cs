@@ -6,6 +6,8 @@ public class TutorialManager : MonoBehaviour
 {
     [SerializeField] TutorialZone[] zones;
 
+    bool tutorialComplete = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -16,5 +18,10 @@ public class TutorialManager : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void TriggerZone(string zoneName)
+    {
+        Fungus.Flowchart.BroadcastFungusMessage(zoneName);
     }
 }

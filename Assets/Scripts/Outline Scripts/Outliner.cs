@@ -40,11 +40,11 @@ public class Outliner : MonoBehaviour
         //apply everything and clean up in commandbuffer
         commands.Blit(source, destination, applyOutline);
 
-        if (activeObject != null)
-        {
-            commands.DrawRenderer(activeObject, testWrite);
-        }
-        commands.Blit(source, destination, activeOutline);
+        //if (activeObject != null)
+        //{
+        //    commands.DrawRenderer(activeObject, testWrite);
+        //}
+        //commands.Blit(source, destination, activeOutline);
         commands.ReleaseTemporaryRT(selectionBuffer);
 
         //execute and clean up commandbuffer itself

@@ -18,7 +18,9 @@ namespace Fungus
         /// <summary> Click anywhere on Say Dialog to advance. </summary>
         ClickOnDialog,
         /// <summary> Click on continue button to advance. </summary>
-        ClickOnButton
+        ClickOnButton,
+        /// <summary> Using Input System </summary>
+        Button
     }
 
     /// <summary>
@@ -110,6 +112,12 @@ namespace Fungus
                     dialogClickedFlag = false;
                 }
                 break;
+            case ClickMode.Button:
+                    if (Input.GetButtonDown("Dialogue"))
+                    {
+                        SetClickAnywhereClickedFlag();
+                    }
+                    break;
             }
 
             if (ignoreClickTimer > 0f)
@@ -166,7 +174,7 @@ namespace Fungus
             ignoreClickTimer = nextClickDelay;
 
             // Only applies if ClickedAnywhere is selected
-            if (clickMode == ClickMode.ClickAnywhere)
+            if (clickMode == ClickMode.ClickAnywhere || clickMode == ClickMode.Button)
             {
                 SetNextLineFlag();
             }
