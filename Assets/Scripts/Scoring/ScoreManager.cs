@@ -47,7 +47,7 @@ public class ScoreManager : MonoBehaviour
     Coroutine resetCo;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         instance = this;
         durTrickText.text = " ";

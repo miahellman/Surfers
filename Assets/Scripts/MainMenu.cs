@@ -28,6 +28,11 @@ public class MainMenu : MonoBehaviour
         {
             TransitionToTutorial();
         }
+
+        if (Input.GetButtonDown(quitButtonName))
+        {
+            Application.Quit();
+        }
     }
 
     public void TransitionToTutorial()
@@ -66,6 +71,6 @@ public class MainMenu : MonoBehaviour
         }
 
         yield return new WaitForSeconds(0.5f);
-        GameManager.instance.UpdateState(GameManager.GameState.TUTORIAL);
+        GameManager.instance.UpdateState(GameManager.GameState.INTRO);
     }
 }

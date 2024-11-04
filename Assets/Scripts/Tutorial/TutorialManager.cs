@@ -24,7 +24,7 @@ public class TutorialManager : MonoBehaviour
         
     }
 
-    public void StartTutorial()
+    public void StartIntro()
     {
         Fungus.Flowchart.BroadcastFungusMessage("start");
     }
@@ -34,16 +34,22 @@ public class TutorialManager : MonoBehaviour
         if (zoneName == "end")
         {
             tutorialComplete = true;
+            GameManager.instance.UpdateState(GameManager.GameState.GAME);
         }
         else
         {
             Fungus.Flowchart.BroadcastFungusMessage(zoneName);
+            //TimeControl.instance.SetFreeze(true, true, true);
+            TimeControl.instance.ChangeTime(0.06f, true);
+            player.GetComponent<SurfController>().DisableInput(true);
         }
     }
 
     public void Unfreeze()
     {
-        TimeControl.instance.SetFreeze(false, true, true);
+        //TimeControl.instance.SetFreeze(false, true, true);
+        TimeControl.instance.ResetTime(true);
+        player.GetComponent<SurfController>().DisableInput(false);
     }
 
     public void SetPlayerActive(bool active, bool tutorial)

@@ -17,6 +17,7 @@ public class Outliner : MonoBehaviour
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
+        //if (GameManager.instance.GetGameState() == GameManager.GameState.INTRO) { return; }
         //setup stuff
         var commands = new CommandBuffer();
         int selectionBuffer = Shader.PropertyToID("_SelectionBuffer");
@@ -29,22 +30,25 @@ public class Outliner : MonoBehaviour
         //{
         //    commands.DrawRenderer(OutlinedObject, writeObject);
         //}
-        if (outlineObjects.Count > 0)
+        if (activeObject != null)
+        {
+            commands.DrawRenderer(activeObject, writeObject);
+            commands.Blit(source, destination, activeOutline);
+        }
+        else if (outlineObjects.Count > 0)
         {
             foreach (Renderer o in outlineObjects)
             {
                 commands.DrawRenderer(o, writeObject);
             }
+            commands.Blit(source, destination, applyOutline);
+        }
+        else
+        {
+            commands.Blit(source, destination, applyOutline);
         }
 
         //apply everything and clean up in commandbuffer
-        commands.Blit(source, destination, applyOutline);
-
-        //if (activeObject != null)
-        //{
-        //    commands.DrawRenderer(activeObject, testWrite);
-        //}
-        //commands.Blit(source, destination, activeOutline);
         commands.ReleaseTemporaryRT(selectionBuffer);
 
         //execute and clean up commandbuffer itself

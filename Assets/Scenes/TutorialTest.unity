@@ -272,6 +272,7 @@ GameObject:
   m_Component:
   - component: {fileID: 36631511}
   - component: {fileID: 36631510}
+  - component: {fileID: 36631512}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -308,6 +309,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &36631512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 36631509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42b07be483c7be94f999a3a48962cd7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &43984689
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,6 +441,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   topBar: {fileID: 566706289}
   bottomBar: {fileID: 1229594156}
+  startButtonName: Jump
+  quitButtonName: Wallride
 --- !u!1 &79437388
 GameObject:
   m_ObjectHideFlags: 0
@@ -480,6 +495,7 @@ GameObject:
   - component: {fileID: 79437428}
   - component: {fileID: 79437427}
   - component: {fileID: 79437435}
+  - component: {fileID: 79437436}
   m_Layer: 0
   m_Name: Flowchart
   m_TagString: Untagged
@@ -531,7 +547,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 43
     y: 110
-    width: 76.582275
+    width: 77.34177
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -569,7 +585,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1
-  scrollPos: {x: 365.00586, y: 206.45135}
+  scrollPos: {x: 365.0059, y: 42.400696}
   variablesScrollPos: {x: 0, y: 0}
   variablesExpanded: 1
   blockViewHeight: 477
@@ -581,7 +597,7 @@ MonoBehaviour:
     width: 1114
     height: 859
   selectedBlocks:
-  - {fileID: 79437418}
+  - {fileID: 79437413}
   selectedCommands: []
   variables: []
   description: 
@@ -1016,7 +1032,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: -87
     y: 237
-    width: 105.6962
+    width: 104.68353
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -1094,9 +1110,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   nodeRect:
     serializedVersion: 2
-    x: 30
+    x: 21.898745
     y: 185
-    width: 117.08859
+    width: 117.84809
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -1108,6 +1124,7 @@ MonoBehaviour:
   - {fileID: 79437412}
   - {fileID: 79437411}
   - {fileID: 79437409}
+  - {fileID: 79437436}
   suppressAllAutoSelections: 0
 --- !u!114 &79437414
 MonoBehaviour:
@@ -1256,7 +1273,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 432.13403
     y: 133.48459
-    width: 82.91139
+    width: 81.392395
     height: 40
   tint: {r: 1, g: 1, b: 1, a: 1}
   useCustomTint: 0
@@ -1671,6 +1688,51 @@ MonoBehaviour:
   parentBlock: {fileID: 79437391}
   suppressBlockAutoSelect: 0
   message: start
+--- !u!114 &79437436
+MonoBehaviour:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 79437388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 688e35811870d403f9e2b1ab2a699d98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemId: 44
+  indentLevel: 0
+  description: 
+  targetObject: {fileID: 36631509}
+  targetComponentAssemblyName: GameManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    PublicKeyToken=null
+  targetComponentFullname: UnityEngine.Component[]
+  targetComponentText: GameManager
+  targetMethod: UpdateState
+  targetMethodText: 'UpdateState (GameState): Void'
+  methodParameters:
+  - objValue:
+      typeAssemblyname: GameManager+GameState, Assembly-CSharp, Version=0.0.0.0,
+        Culture=neutral, PublicKeyToken=null
+      typeFullname: GameManager+GameState
+      intValue: 2
+      boolValue: 0
+      floatValue: 0
+      stringValue: 
+      colorValue: {r: 0, g: 0, b: 0, a: 0}
+      gameObjectValue: {fileID: 0}
+      materialValue: {fileID: 0}
+      objectValue: {fileID: 0}
+      spriteValue: {fileID: 0}
+      textureValue: {fileID: 0}
+      vector2Value: {x: 0, y: 0}
+      vector3Value: {x: 0, y: 0, z: 0}
+    variableKey: 
+  saveReturnValue: 0
+  returnValueVariableKey: 
+  returnValueType: System.Void
+  showInherited: 0
+  callMode: 0
 --- !u!4 &115176680 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5865204257607569232, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
@@ -1857,8 +1919,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 86.11084, y: 47.47694, z: 77.76032}
-  m_Center: {x: 0, y: 13.567423, z: -9.0985985}
+  m_Size: {x: 86.11084, y: 47.47694, z: 30.485725}
+  m_Center: {x: 0, y: 13.567423, z: 14.5387}
 --- !u!1 &340015650
 GameObject:
   m_ObjectHideFlags: 0
@@ -2178,13 +2240,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 375096850031798048, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.39
-      objectReference: {fileID: 0}
-    - target: {fileID: 375096850031798048, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -4.87
+    - target: {fileID: 2248882880842816280, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
+      propertyPath: wallRideDist
+      value: 5.25
       objectReference: {fileID: 0}
     - target: {fileID: 3428202443194887064, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2229,10 +2287,6 @@ PrefabInstance:
     - target: {fileID: 8723845016786276366, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
       propertyPath: m_Name
       value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 8723845016786276366, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4500,8 +4554,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 9.22, y: 4.76, z: 5.12}
-  m_Center: {x: 0, y: 1.02, z: -0.77}
+  m_Size: {x: 9.22, y: 4.760001, z: 3.664828}
+  m_Center: {x: 0, y: 1.02, z: -0.042413056}
 --- !u!23 &1821862405
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -5006,7 +5060,7 @@ Camera:
   field of view: 65.2
   orthographic: 0
   orthographic size: 5
-  m_Depth: 0
+  m_Depth: 3.72
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295

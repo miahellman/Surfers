@@ -55,9 +55,9 @@ public class WallrideObject : Interactable
 
     public void HighlightColor(bool value)
     {
-        //colorHighlighted = value;
-        //if (colorHighlighted) { GetComponent<Renderer>().material.color = Color.red; }
-        //else { GetComponent<Renderer>().material.color = originColor; }
+        colorHighlighted = value;
+        if (colorHighlighted) { GetComponent<Renderer>().material.color = Color.red; }
+        else { GetComponent<Renderer>().material.color = originColor; }
     }
 
     public bool CheckValidNormal(Vector3 normal)

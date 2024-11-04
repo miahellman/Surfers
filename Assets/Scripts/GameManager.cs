@@ -6,8 +6,9 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] TMP_Text timerText;
+    [SerializeField] GameState startingState = GameState.MENU;
 
-    public enum GameState { MENU, TUTORIAL, GAME, PAUSED, GAME_OVER };
+    public enum GameState { MENU, INTRO, TUTORIAL, GAME, PAUSED, GAME_OVER };
     GameState gameState;
 
     public static GameManager instance;
@@ -32,7 +33,7 @@ public class GameManager : MonoBehaviour
         mainMenu = FindObjectOfType<MainMenu>();
         tutorial = FindObjectOfType<TutorialManager>();
 
-        UpdateState(GameState.MENU);
+        UpdateState(startingState);
     }
 
     // Update is called once per frame
@@ -72,8 +73,10 @@ public class GameManager : MonoBehaviour
                 case GameState.MENU:
                     ScoreManager.instance.SetCanvasActive(false);
                     break;
+                case GameState.INTRO:
+                    tutorial.StartIntro();
+                    break;
                 case GameState.TUTORIAL:
-                    tutorial.StartTutorial();
                     mainMenu.enabled = false;
                     break;
                 case GameState.GAME:
@@ -84,7 +87,7 @@ public class GameManager : MonoBehaviour
                 case GameState.GAME_OVER:
                     timerRunning = false;
                     endScreen.SetScreen(ScoreManager.instance.GetOverallScore(), ScoreManager.instance.GetSpots());
-                    player.DisableInput();
+                    player.DisableInput(true);
                     break;
 
             }

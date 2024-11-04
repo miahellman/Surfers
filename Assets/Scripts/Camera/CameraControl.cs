@@ -47,4 +47,6 @@ public class CameraControl : MonoBehaviour
         followPoint.localPosition = defaultFollowPointPos + offset;
         followPoint.localEulerAngles = rotOffset;
     }
+
+
 }

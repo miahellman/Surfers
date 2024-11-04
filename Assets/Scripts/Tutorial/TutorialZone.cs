@@ -28,7 +28,6 @@ public class TutorialZone : MonoBehaviour
         {
             manager.TriggerZone(zoneName + " zone");
             entered = true;
-            TimeControl.instance.SetFreeze(true, true, true);
         }
     }
 }

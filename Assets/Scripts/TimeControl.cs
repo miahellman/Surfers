@@ -36,16 +36,30 @@ public class TimeControl : MonoBehaviour
         //}
     }
 
-    public void ChangeTime(float newScale)
+    public void ChangeTime(float newScale, bool playerOnly)
     {
-        Time.timeScale = newScale;
-        Time.fixedDeltaTime = defaultFixedDeltaTime * newScale;
+        if (playerOnly)
+        {
+            FindObjectOfType<SurfController>().SetLocalTimeScale(newScale);
+        }
+        else
+        {
+            Time.timeScale = newScale;
+            Time.fixedDeltaTime = defaultFixedDeltaTime * newScale;
+        }
     }
 
-    public void ResetTime()
+    public void ResetTime(bool playerOnly)
     {
-        Time.timeScale = defaultTimeScale;
-        Time.fixedDeltaTime = defaultFixedDeltaTime;
+        if (playerOnly)
+        {
+            FindObjectOfType<SurfController>().SetLocalTimeScale(1);
+        }
+        else
+        {
+            Time.timeScale = defaultTimeScale;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+        }
     }
 
     // instant immediately freezes/unfreezes
