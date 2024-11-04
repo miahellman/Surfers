@@ -12,6 +12,7 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] SpotInstance1[] spots;
 
     [Header("UI")]
+    [SerializeField] GameObject canvas;
     [SerializeField] TMP_Text trickNameText;
     [SerializeField] TMP_Text durTrickText;
     [SerializeField] TMP_Text overallScoreText;
@@ -137,6 +138,11 @@ public class ScoreManager : MonoBehaviour
         yield return new WaitForSeconds(maxDownTime);
         setActive = false;
         ScoreSet();
+    }
+
+    public void SetCanvasActive(bool active)
+    {
+        canvas.SetActive(active);
     }
 
     public void ForceStopSet()

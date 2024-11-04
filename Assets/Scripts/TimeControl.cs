@@ -13,10 +13,13 @@ public class TimeControl : MonoBehaviour
 
     bool frozen = false; // seems good to keep track of this
 
+    SurfController player;
+
     // Start is called before the first frame update
     void Start()
     {
         instance = this;
+        player = FindObjectOfType<SurfController>();
         defaultTimeScale = Time.timeScale;
         defaultFixedDeltaTime = Time.fixedDeltaTime;
     }
@@ -46,13 +49,21 @@ public class TimeControl : MonoBehaviour
     }
 
     // instant immediately freezes/unfreezes
-    public void SetFreeze(bool _frozen, bool instant)
+    public void SetFreeze(bool _frozen, bool instant, bool playerOnly)
     {
         frozen = _frozen;
         if (instant)
         {
-            if (frozen) { Time.timeScale = 0; }
-            else { Time.timeScale = defaultTimeScale; }
+            if (frozen)
+            {
+                if (playerOnly) { player.enabled = false; player.GetComponent<Rigidbody>().isKinematic = true; }
+                else { Time.timeScale = 0; }
+            }
+            else
+            {
+                if (playerOnly) { player.enabled = true; player.GetComponent<Rigidbody>().isKinematic = false; }
+                else { Time.timeScale = defaultTimeScale; } 
+            }
         }
         else
         {

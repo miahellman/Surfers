@@ -8,6 +8,8 @@ public class TutorialZone : MonoBehaviour
 
     TutorialManager manager;
 
+    bool entered = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -22,10 +24,11 @@ public class TutorialZone : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<SurfController>() != null)
+        if (other.GetComponent<SurfController>() != null && !entered)
         {
-            manager.TriggerZone(zoneName);
-            TimeControl.instance.SetFreeze(true, true);
+            manager.TriggerZone(zoneName + " zone");
+            entered = true;
+            TimeControl.instance.SetFreeze(true, true, true);
         }
     }
 }

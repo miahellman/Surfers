@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
     public enum GameState { MENU, TUTORIAL, GAME, PAUSED, GAME_OVER };
     GameState gameState;
 
+    public static GameManager instance;
+
     [SerializeField] float startTime = 180; // seconds
     float timer;
     bool timerRunning = false;
@@ -17,15 +19,20 @@ public class GameManager : MonoBehaviour
     bool stateUpdated = false;
 
     EndScreen endScreen;
+    MainMenu mainMenu;
     SurfController player;
+    TutorialManager tutorial;
 
     // Start is called before the first frame update
     void Start()
     {
+        instance = this;
         endScreen = FindObjectOfType<EndScreen>();
         player = FindObjectOfType<SurfController>();
+        mainMenu = FindObjectOfType<MainMenu>();
+        tutorial = FindObjectOfType<TutorialManager>();
 
-        UpdateState(GameState.GAME);
+        UpdateState(GameState.MENU);
     }
 
     // Update is called once per frame
@@ -62,7 +69,15 @@ public class GameManager : MonoBehaviour
         {
             switch(gameState)
             {
+                case GameState.MENU:
+                    ScoreManager.instance.SetCanvasActive(false);
+                    break;
+                case GameState.TUTORIAL:
+                    tutorial.StartTutorial();
+                    mainMenu.enabled = false;
+                    break;
                 case GameState.GAME:
+                    ScoreManager.instance.SetCanvasActive(true);
                     timerRunning = true;
                     timer = startTime;
                     break;
@@ -76,4 +91,6 @@ public class GameManager : MonoBehaviour
         }
         stateUpdated = true;
     }
+
+    public GameState GetGameState() { return gameState; }
 }

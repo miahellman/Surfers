@@ -19,7 +19,7 @@ public class CameraControl : MonoBehaviour
     public static CameraControl instance;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         defaultFOV = GetComponent<Camera>().fieldOfView;
         followPointController = GetComponentInParent<CameraFollowPoint>();
@@ -33,6 +33,7 @@ public class CameraControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //if (GameManager.instance.GetGameState() == GameManager.GameState.TUTORIAL) { return; }
         //fovOffset = followPointController.DistFromTarget() * fovMultiplier;
         fovOffset = (Mathf.Max(0, player.ForwardVelocity().magnitude) / 5) * fovMultiplier;
         GetComponent<Camera>().fieldOfView = defaultFOV + fovOffset;
