@@ -6,6 +6,7 @@ using Tricks;
 
 public class SurfController : MonoBehaviour
 {
+    [SerializeField] bool flippingOn = true;
     [SerializeField] LayerMask floorRaycastLayers;
     [SerializeField] float dotTolerance = 0.5f;
 
@@ -412,25 +413,28 @@ public class SurfController : MonoBehaviour
         #endregion
 
         #region flipping
-        if (!isGrounded)
+        if (flippingOn)
         {
-            if (Mathf.Abs(Input.GetAxis("Flip")) > 0 || Mathf.Abs(Input.GetAxis("FlipMouse")) > 0)
+            if (!isGrounded)
             {
-                board.SetFlipActive(true);
-                if (Mathf.Abs(Input.GetAxis("Flip")) > 0) { board.SetValue(Input.GetAxis("Flip")); }
-                else { board.SetValue(Input.GetAxis("FlipMouse")); }
-                
+                if (Mathf.Abs(Input.GetAxis("Flip")) > 0 || Mathf.Abs(Input.GetAxis("FlipMouse")) > 0)
+                {
+                    board.SetFlipActive(true);
+                    if (Mathf.Abs(Input.GetAxis("Flip")) > 0) { board.SetValue(Input.GetAxis("Flip")); }
+                    else { board.SetValue(Input.GetAxis("FlipMouse")); }
+
+                }
+                else
+                {
+                    board.SetFlipActive(false);
+                    board.SetValue(0);
+                }
             }
             else
             {
                 board.SetFlipActive(false);
                 board.SetValue(0);
             }
-        }
-        else
-        {
-            board.SetFlipActive(false);
-            board.SetValue(0);
         }
         #endregion
 

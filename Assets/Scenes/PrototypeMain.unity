@@ -4204,6 +4204,10 @@ PrefabInstance:
       propertyPath: outliner
       value: 
       objectReference: {fileID: 1242192499}
+    - target: {fileID: 2248882880842816280, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
+      propertyPath: flippingOn
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3428202443194887064, guid: d30948de8cb6d3b4a8db2ccf818fe82e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
