@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6561507982742563588
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4743298721330161179}
+  m_Layer: 0
+  m_Name: Camera Follow Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 1206586993520771344, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4743298721330161179
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6561507982742563588}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.0423845, y: -0, z: -0, w: 0.9991014}
+  m_LocalPosition: {x: 0, y: 0.39, z: -4.87}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3910481400648036531}
+  m_LocalEulerAnglesHint: {x: -4.858, y: 0, z: 0}
+--- !u!1 &8356683354076819887
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3910481400648036531}
+  - component: {fileID: 3895656302202572768}
+  m_Layer: 0
+  m_Name: Camera Rotate Pivot Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3910481400648036531
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8356683354076819887}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4743298721330161179}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3895656302202572768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8356683354076819887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d423b8b27c398b408c1215f15dfcceb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTransform: {fileID: 0}
+  wallrideWallOffset: 8
+  wallrideCameraOffsetZ: 8
+  grindingCameraOffsetY: 0
+  grindingCameraOffsetZ: 4
+  airborneCameraOffsetZ: 10
+  airborneCameraOffsetY: 0
+  airborneBehaviorGroundDistThreshold: 25
+  floorRaycastLayers:
+    serializedVersion: 2
+    m_Bits: 1049075
+  groundedCameraOffsetZ: 6.3
+  groundedCameraOffsetY: 0.3
+  focusRayLength: 8
+  afterBounceLength: 6
+  camReflectionLayerMask:
+    serializedVersion: 2
+    m_Bits: 0

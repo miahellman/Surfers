@@ -56,7 +56,7 @@ public class BoundingCube : MonoBehaviour
     
     }
 
-    void WarpPlayer() {
+    public void WarpPlayer() {
 
         SpotInstance1[] spotsToWarpTo = FindObjectsOfType<SpotInstance1>();
 

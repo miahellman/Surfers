@@ -26,6 +26,7 @@ public class RumbleManager : MonoBehaviour
     public void SetRumbleActive(float lowFrequency, float highFrequency)
     {
         gamepad = Gamepad.current;
+        if (gamepad == null) { return; }
 
         gamepad.SetMotorSpeeds(lowFrequency, highFrequency);
     }
@@ -33,11 +34,13 @@ public class RumbleManager : MonoBehaviour
     public void SetRumbleActive(bool active)
     {
         gamepad = Gamepad.current;
+        if (gamepad == null) { return; }
         if (!active) { gamepad.SetMotorSpeeds(0, 0); }
     }
 
     public void RumbleForTime(float time, float lowFrequency, float highFrequency)
     {
+        if (Gamepad.current == null) { return; }
         rumbleCo = StartCoroutine(RumbleTimer(time, lowFrequency, highFrequency));
     }
 

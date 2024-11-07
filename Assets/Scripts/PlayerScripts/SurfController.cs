@@ -82,7 +82,7 @@ public class SurfController : MonoBehaviour
     Collider validCollider;
     Vector3 lastPosition; // for checking collision
     LastGroundPoint lastGroundPoint = new LastGroundPoint();
-    Outliner outliner;
+    [SerializeField] public Outliner outliner;
 
     // wallride
     [Header("Wallriding")]
@@ -119,8 +119,6 @@ public class SurfController : MonoBehaviour
     float curBoardYaw;
     Vector3 finalCalculatedRotation;
 
-    bool collisionActive = true;
-
     // spinning out
     bool isSpinningOut = false;
     float spinOutRecovery = 3f;
@@ -144,7 +142,7 @@ public class SurfController : MonoBehaviour
         board = GetComponentInChildren<BoardGraphics>();
         arcCast = GetComponent<ArcCastComponent>();
         graphics = transform.GetChild(0).gameObject;
-        outliner = FindObjectOfType<Outliner>();
+        //outliner = FindObjectOfType<Outliner>();
 
         //boostsAvailable = baseBoostAmount;
         //boostsText.text = "x" + (boostsAvailable + additionalBoosts);
@@ -159,6 +157,14 @@ public class SurfController : MonoBehaviour
     {
         BoostCooldown();
 
+        if (Input.GetButtonDown("Unstuck") && !inputDisabled) { Unstuck(); }
+
+        if (transform.position.y <= GameObject.FindGameObjectWithTag("Abyss").transform.position.y)
+        {
+            transform.position = lastGroundPoint.pos;
+            transform.rotation = lastGroundPoint.rot;
+        }
+
         switch (movementState)
         {
             case MovementState.STANDARD:
@@ -171,8 +177,8 @@ public class SurfController : MonoBehaviour
                         interactables.Add(coll.GetComponent<Renderer>());
                     }
                 }
-                if (interactables.Count > 0) { outliner.SetObjects(interactables); }
-                else { outliner.ClearObjects(); }
+                if (interactables.Count > 0) { if (outliner != null) { outliner.SetObjects(interactables); } }
+                else { if (outliner != null) { outliner.ClearObjects(); }  }
 
                 if (CheckForWall())
                 {
@@ -249,14 +255,13 @@ public class SurfController : MonoBehaviour
         
         if (!stateUpdated)
         {
-            outliner.ClearObjects();
+            if (outliner != null) { outliner.ClearObjects(); }
             switch (movementState)
             {
                 case MovementState.STANDARD:
                     RumbleManager.instance.SetRumbleActive(false);
                     break;
                 case MovementState.GRIND:
-                    RumbleManager.instance.SetRumbleActive(10, 10);
                     canGrind = false;
                     rb.angularVelocity = Vector3.zero;
                     spinOutVector = Vector3.zero;
@@ -274,7 +279,7 @@ public class SurfController : MonoBehaviour
                         //Vector3 attachPoint = leftWallHit.point + leftWallHit.normal * 1;
                         //transform.position = attachPoint;
                         //wallrideDir = Quaternion.AngleAxis(-90, Vector3.up) * leftWallHit.normal;
-                        attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + transform.right;
+                        attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + (transform.right / 2);
                     }
                     else
                     {
@@ -282,7 +287,7 @@ public class SurfController : MonoBehaviour
                         //Vector3 attachPoint = rightWallHit.point + rightWallHit.normal * 1;
                         //transform.position = attachPoint;
                         //wallrideDir = Quaternion.AngleAxis(90, Vector3.up) * rightWallHit.normal;
-                        attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + -transform.right;
+                        attachPoint = curWallRide.collider.ClosestPointOnBounds(transform.position) + (-transform.right / 2);
                     }
 
                     //rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
@@ -352,7 +357,7 @@ public class SurfController : MonoBehaviour
 
                     if (secondHit.collider.tag == "Floor")
                     {
-                        lastGroundPoint.pos = transform.position;
+                        lastGroundPoint.pos = secondHit.collider.ClosestPointOnBounds(transform.position) + (transform.up * hoverHeight * 3f);
                         lastGroundPoint.rot = transform.rotation;
                     }
                 }
@@ -529,7 +534,7 @@ public class SurfController : MonoBehaviour
         //}
         //if (isBreaking) { turnVelocity -= breakTurnDecel * Time.deltaTime * localTimeScale; }
         if (isGrounded) { turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed); }
-        else { turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed * 0.75f); }
+        else { turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed * 0.7f); }
 
         if (isBreaking) { yaw = turnVelocity * breakTurnDir; }
         else { yaw = turnVelocity * horInput; }
@@ -542,7 +547,7 @@ public class SurfController : MonoBehaviour
             Quaternion currentToVelocityForward = Quaternion.FromToRotation(transform.forward, rb.velocity.normalized) * transform.rotation;
             Quaternion slerpedVelocityAlignmentRot = Quaternion.Slerp(transform.rotation, currentToVelocityForward, .008f);
 
-            transform.rotation = slerpedVelocityAlignmentRot;
+            //transform.rotation = slerpedVelocityAlignmentRot;
 
         }
 
@@ -592,6 +597,8 @@ public class SurfController : MonoBehaviour
 
     void ProcessGrindMovement()
     {
+        RumbleManager.instance.SetRumbleActive(0.05f * (maxSpeed / baseVelocity), 0.35f * (maxSpeed / baseVelocity));
+
         rb.velocity = grindDir * (baseVelocity + additionalVelocity);
         baseVelocity -= grindDecel * Time.deltaTime * localTimeScale; additionalVelocity -= grindDecel * Time.deltaTime * localTimeScale;
         baseVelocity = Mathf.Clamp(baseVelocity, 0, maxSpeed);
@@ -636,6 +643,9 @@ public class SurfController : MonoBehaviour
         {
             turnVelocity = Mathf.MoveTowards(turnVelocity, 0, turnDecel * Time.deltaTime * localTimeScale);
         }
+
+        if (Input.GetAxis("Horizontal") < 0) { RumbleManager.instance.SetRumbleActive(Mathf.Abs(Input.GetAxis("Horizontal")) * 0.7f, 0); }
+        else { RumbleManager.instance.SetRumbleActive(0, Mathf.Abs(Input.GetAxis("Horizontal")) * 0.7f); }
 
         turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed / 2);
         yaw = turnVelocity * Input.GetAxis("Horizontal");
@@ -765,15 +775,15 @@ public class SurfController : MonoBehaviour
                         canGrind = true;
                         grindDir = dir;
                         //currentGrind.HighlightColor(true);
-                        if (movementState == MovementState.GRIND) { outliner.ClearOutlineObject(); }
-                        else { outliner.SetOutlineObject(currentGrind.gameObject); }
+                        if (movementState == MovementState.GRIND) { if (outliner != null) { outliner.ClearOutlineObject(); }  }
+                        else { if (outliner != null) { outliner.SetOutlineObject(currentGrind.gameObject); } }
                     }
                 }
                 return true;
             }
         }
         canGrind = false;
-        if (currentGrind != null) { outliner.ClearOutlineObject(); UpdateState(MovementState.STANDARD); ScoreManager.instance.StopTrick(); }
+        if (currentGrind != null) { if (outliner != null) { outliner.ClearOutlineObject(); } UpdateState(MovementState.STANDARD); ScoreManager.instance.StopTrick(); }
         currentGrind = null;
         return false;
     }
@@ -785,8 +795,8 @@ public class SurfController : MonoBehaviour
 
 
         float angleDiff;
-        if (wallLeft) 
-        { 
+        if (wallLeft)
+        {
             //leftWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
             angleDiff = Vector3.Angle(leftWallHit.normal, transform.right);
             if (angleDiff <= maxWallrideAgleDiff) { outliner.SetOutlineObject(leftWallHit.collider.gameObject); return true; }
@@ -794,8 +804,8 @@ public class SurfController : MonoBehaviour
             //if (leftWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(leftWallHit.normal)) { return true; }
             //else { return false; } 
         }
-        else if (wallRight) 
-        { 
+        else if (wallRight)
+        {
             //rightWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
             angleDiff = Vector3.Angle(rightWallHit.normal, -transform.right);
             if (angleDiff <= maxWallrideAgleDiff) { outliner.SetOutlineObject(rightWallHit.collider.gameObject); return true; }
@@ -803,9 +813,9 @@ public class SurfController : MonoBehaviour
             //if (rightWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(rightWallHit.normal)) { return true; }
             //else { return false; }
         }
-        else 
+        else
         {
-            outliner.ClearOutlineObject();
+            if (outliner != null) { outliner.ClearOutlineObject(); }
             return false; 
         }
     }
@@ -855,7 +865,9 @@ public class SurfController : MonoBehaviour
 
                     transform.position = lastPosition;
 
-                    RumbleManager.instance.RumbleForTime(0.25f, 10, 10);
+                    float rumbleMultiplier = Mathf.Abs(finalCalculatedVelocity.magnitude);
+                    rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
+                    RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
                 }
             }
         }
@@ -887,7 +899,9 @@ public class SurfController : MonoBehaviour
                 
                 transform.position = lastPosition;
 
-                RumbleManager.instance.RumbleForTime(0.25f, 10, 10);
+                float rumbleMultiplier = Mathf.Abs(finalCalculatedVelocity.magnitude);
+                rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
+                RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
             }
         }
 
@@ -913,11 +927,22 @@ public class SurfController : MonoBehaviour
 
                     transform.position = lastPosition;
 
-                    RumbleManager.instance.RumbleForTime(0.25f, 10, 10);
+                    float rumbleMultiplier = Mathf.Abs(finalCalculatedVelocity.magnitude);
+                    rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
+                    RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
                 }
             }
         }
         lastPosition = transform.position;
+    }
+
+    public void Unstuck()
+    {
+        FindObjectOfType<BoundingCube>().WarpPlayer();
+        baseVelocity = 0;
+        additionalVelocity = 0;
+        jumpVelocity = 0;
+        transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
     }
 
     public void DisableInput(bool disabled)
@@ -970,14 +995,5 @@ public class SurfController : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.matrix = Matrix4x4.TRS(transform.position + interactableBox.RelativeBoxPosition(transform), transform.rotation, interactableBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.tag == "Abyss")
-        {
-            transform.position = lastGroundPoint.pos;
-            transform.rotation = lastGroundPoint.rot;
-        }
     }
 }

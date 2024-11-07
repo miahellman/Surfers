@@ -15,6 +15,28 @@ public class Outliner : MonoBehaviour
     [SerializeField] Material activeOutline;
     [SerializeField] Material testWrite;
 
+    public Outliner(Material write, Material interactOutline, Material closeOutline, Material testWriteMat)
+    {
+        writeObject = write;
+        applyOutline = interactOutline;
+        activeOutline = closeOutline;
+        testWrite = testWriteMat;
+    }
+
+    public void SetMats(Material write, Material interactOutline, Material closeOutline, Material testWriteMat)
+    {
+        writeObject = write;
+        applyOutline = interactOutline;
+        activeOutline = closeOutline;
+        testWrite = testWriteMat;
+        outlineObjects = new List<Renderer>();
+    }
+
+    private void Start()
+    {
+        outlineObjects = new List<Renderer>();
+    }
+
     void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         //if (GameManager.instance.GetGameState() == GameManager.GameState.INTRO) { return; }

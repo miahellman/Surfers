@@ -8,7 +8,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] TMP_Text timerText;
     [SerializeField] GameState startingState = GameState.MENU;
 
-    public enum GameState { MENU, INTRO, TUTORIAL, GAME, PAUSED, GAME_OVER };
+    [SerializeField] GameObject camControl;
+    [SerializeField] GameObject camFollow;
+
+    [SerializeField] Transform restartPoint;
+
+    public enum GameState { MENU, INTRO, TUTORIAL, GAME, PAUSED, END };
     GameState gameState;
 
     public static GameManager instance;
@@ -27,7 +32,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        instance = this;
+        if (instance == null) { instance = this; }
         endScreen = FindObjectOfType<EndScreen>();
         player = FindObjectOfType<SurfController>();
         mainMenu = FindObjectOfType<MainMenu>();
@@ -46,7 +51,7 @@ public class GameManager : MonoBehaviour
                 {
                     if (timer <= 0)
                     {
-                        UpdateState(GameState.GAME_OVER);
+                        UpdateState(GameState.END);
                         timerText.text = "0:00";
                     }
                     else
@@ -77,14 +82,25 @@ public class GameManager : MonoBehaviour
                     tutorial.StartIntro();
                     break;
                 case GameState.TUTORIAL:
+                    CameraControl cam = camControl.GetComponentInChildren<CameraControl>();
+                    Outliner outliner = cam.gameObject.AddComponent<Outliner>();
+                    outliner.SetMats(cam.outlineMats[0], cam.outlineMats[1], cam.outlineMats[2], cam.outlineMats[3]);
+                    player.outliner = outliner;
+
+                    camControl.SetActive(true);
+                    camFollow.SetActive(true);
+
+                    mainMenu.CloseMenu();
                     mainMenu.enabled = false;
                     break;
                 case GameState.GAME:
+                    endScreen.Close();
+                    player.DisableInput(false);
                     ScoreManager.instance.SetCanvasActive(true);
                     timerRunning = true;
                     timer = startTime;
                     break;
-                case GameState.GAME_OVER:
+                case GameState.END:
                     timerRunning = false;
                     endScreen.SetScreen(ScoreManager.instance.GetOverallScore(), ScoreManager.instance.GetSpots());
                     player.DisableInput(true);
@@ -93,6 +109,13 @@ public class GameManager : MonoBehaviour
             }
         }
         stateUpdated = true;
+    }
+
+    public void PlayAgain()
+    {
+        player.transform.position = restartPoint.position;
+        ScoreManager.instance.ClearScores();
+        UpdateState(GameState.GAME);
     }
 
     public GameState GetGameState() { return gameState; }

@@ -11,6 +11,8 @@ public class MainMenu : MonoBehaviour
     [SerializeField] string startButtonName = "Jump";
     [SerializeField] string quitButtonName = "Wallride";
 
+    [SerializeField] Camera menuCam;
+
     TMP_Text[] texts;
 
     bool started = false;
@@ -62,7 +64,7 @@ public class MainMenu : MonoBehaviour
             //yValue = Mathf.Lerp(yValue, 680, 150 * Time.deltaTime);
             //topBar.anchoredPosition = new Vector2(topBar.anchoredPosition.x, yValue);
             //bottomBar.anchoredPosition = new Vector3(bottomBar.anchoredPosition.x, -yValue);
-            moveRate -= 115 * Time.deltaTime;
+            moveRate -= 110 * Time.deltaTime;
             moveRate = Mathf.Max(0, moveRate);
             yValue += moveRate * Time.deltaTime;
             topBar.anchoredPosition = new Vector2(topBar.anchoredPosition.x, yValue);
@@ -72,5 +74,10 @@ public class MainMenu : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
         GameManager.instance.UpdateState(GameManager.GameState.INTRO);
+    }
+
+    public void CloseMenu()
+    {
+        menuCam.gameObject.SetActive(false);
     }
 }

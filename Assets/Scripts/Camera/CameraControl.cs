@@ -6,6 +6,9 @@ public class CameraControl : MonoBehaviour
 {
     [SerializeField] float fovMultiplier = 2; // multiplier based on player's speed
 
+    [Header("Outliner Materials")]
+    [SerializeField] public Material[] outlineMats;
+
     Transform followPoint; // the one attached to the player
     Vector3 defaultFollowPointPos;
 

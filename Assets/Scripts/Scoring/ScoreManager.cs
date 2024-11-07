@@ -8,18 +8,21 @@ using Tricks;
 public class ScoreManager : MonoBehaviour
 {
     [SerializeField] float maxDownTime = 3; // how much time you have to do another trick before set is over
-    [SerializeField] float setBonusPercent = 0.15f;
     [SerializeField] SpotInstance1[] spots;
+    [SerializeField] float[] multiplierLevels;
+    [SerializeField] int[] multiplierThresholds;
 
     [Header("UI")]
     [SerializeField] GameObject canvas;
-    [SerializeField] TMP_Text trickNameText;
     [SerializeField] TMP_Text durTrickText;
-    [SerializeField] TMP_Text overallScoreText;
+    [SerializeField] TMP_Text setScoreText;
+    [SerializeField] TMP_Text locationScoreText;
+    [SerializeField] Image multiplierRingFill;
+    [SerializeField] TMP_Text multiplierText;
+    [SerializeField] float fillSpeed = 0.75f;
+    //[SerializeField] TMP_Text overallScoreText;
     [SerializeField] float fadeRate = 0.75f;
     [Tooltip("Bottom to top (0 is newest trick)")][SerializeField] TMP_Text[] trickTexts;
-
-    //List<TrickListItem> trickList = new List<TrickListItem>();
 
     TrickListItem[] trickList = { null, null, null };
 
@@ -39,19 +42,26 @@ public class ScoreManager : MonoBehaviour
 
     int overallScore;
     int highScore;
+    int currentLocationScore; // score for location player is currently in
     int setScore; // current running set
+    int setTricks; // number of tricks done in this set, used for multiplier
     bool setActive = false;
     Trick activeTrick;
     float activeTrickTime;
+    int multiplierIndex = 0;
+    float targetRingFill;
+
 
     Coroutine resetCo;
 
     // Start is called before the first frame update
     void Awake()
     {
-        instance = this;
+        if (instance == null) { instance = this; }
         durTrickText.text = " ";
-        overallScoreText.text = overallScore.ToString();
+        locationScoreText.text = currentLocationScore.ToString();
+        setScoreText.text = setScore.ToString();
+        //overallScoreText.text = overallScore.ToString();
     }
 
     // Update is called once per frame
@@ -80,6 +90,8 @@ public class ScoreManager : MonoBehaviour
                 trickTexts[i].color = new Color(color.r, color.g, color.b, 0);
             }
         }
+
+        multiplierRingFill.fillAmount = Mathf.MoveTowards(multiplierRingFill.fillAmount, targetRingFill, fillSpeed * Time.deltaTime);
     }
 
     public void StartTrick(Trick type)
@@ -109,9 +121,30 @@ public class ScoreManager : MonoBehaviour
         if (resetCo != null) { StopCoroutine(resetCo); }
         resetCo = StartCoroutine(ResetSetTimer());
         //trickNameText.text = type.trickName;
+        StartCoroutine(AddToNumber(setScore, setScore += value));
         setScore += value;
         overallScore += value;
-        overallScoreText.text = overallScore.ToString();
+        //overallScoreText.text = overallScore.ToString();
+        setTricks++;
+
+        //print(multiplierIndex.ToString() + ", " + (multiplierThresholds.Length - 1).ToString());
+        if (multiplierThresholds.Length - 1 > multiplierIndex)
+        {
+            int nextThreshold = multiplierThresholds[multiplierIndex + 1];
+            if (setTricks >= nextThreshold)
+            {
+                multiplierIndex++;
+                //print(multiplierIndex);
+                setTricks = 0;
+                multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+            }
+            targetRingFill = (float)setTricks / (float)multiplierThresholds[multiplierIndex + 1];
+        }
+        else if (multiplierIndex == multiplierThresholds.Length - 1)
+        {
+            multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+            targetRingFill = (float)setTricks / (float)multiplierThresholds[multiplierIndex];
+        }
 
         TrickListItem newItem = new TrickListItem(type.trickName, 1);
 
@@ -154,10 +187,36 @@ public class ScoreManager : MonoBehaviour
 
     void ScoreSet()
     {
-        int setBonus = Mathf.FloorToInt(setScore * setBonusPercent);
+        int setBonus = Mathf.FloorToInt(setScore * (1 - multiplierLevels[multiplierIndex]));
+        currentLocationScore += setBonus + setScore;
         overallScore += setBonus;
-        overallScoreText.text = overallScore.ToString();
+        locationScoreText.text = currentLocationScore.ToString();
+        setScoreText.text = "0";
+        //overallScoreText.text = overallScore.ToString();
         setScore = 0;
+        setTricks = 0;
+        multiplierIndex = 0;
+        targetRingFill = 0;
+        multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+    }
+
+    IEnumerator AddToNumber(int startScore, int newScore)
+    {
+        int displayScore = startScore;
+        while (displayScore < newScore)
+        {
+            displayScore += 10;
+            displayScore = Mathf.Min(displayScore, newScore);
+            setScoreText.text = displayScore.ToString();
+            yield return new WaitForSecondsRealtime(0.06f);
+        }
+    }
+
+    public void ClearScores()
+    {
+        overallScore = 0;
+        setScore = 0;
+        currentLocationScore = 0;
     }
 
     public int GetOverallScore()
