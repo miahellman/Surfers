@@ -8,9 +8,11 @@ using Tricks;
 public class ScoreManager : MonoBehaviour
 {
     [SerializeField] float maxDownTime = 3; // how much time you have to do another trick before set is over
-    [SerializeField] SpotInstance1[] spots;
+    [SerializeField] SpotInstance1[] locations;
     [SerializeField] float[] multiplierLevels;
     [SerializeField] int[] multiplierThresholds;
+
+    SpotInstance1 currentLocation;
 
     [Header("UI")]
     [SerializeField] GameObject canvas;
@@ -21,9 +23,11 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] TMP_Text multiplierText;
     [SerializeField] TMP_Text wallrideLeftText;
     [SerializeField] TMP_Text wallrideRightText;
-    [SerializeField] float fillSpeed = 0.75f;
+    [SerializeField] float multiplierFillSpeed = 0.75f;
+    [SerializeField] LocationCard[] locationCards;
     //[SerializeField] TMP_Text overallScoreText;
     [SerializeField] float fadeRate = 0.75f;
+    
     [Tooltip("Bottom to top (0 is newest trick)")][SerializeField] TMP_Text[] trickTexts;
 
     TrickListItem[] trickList = { null, null, null };
@@ -65,6 +69,11 @@ public class ScoreManager : MonoBehaviour
         wallrideRightText.text = "";
         locationScoreText.text = currentLocationScore.ToString();
         setScoreText.text = setScore.ToString();
+
+        for (int i = 0; i < locationCards.Length - 1; i++)
+        {
+            locationCards[i].SetCard(locations[i].spotName);
+        }
         //overallScoreText.text = overallScore.ToString();
     }
 
@@ -95,7 +104,7 @@ public class ScoreManager : MonoBehaviour
             }
         }
 
-        multiplierRingFill.fillAmount = Mathf.MoveTowards(multiplierRingFill.fillAmount, targetRingFill, fillSpeed * Time.deltaTime);
+        multiplierRingFill.fillAmount = Mathf.MoveTowards(multiplierRingFill.fillAmount, targetRingFill, multiplierFillSpeed * Time.deltaTime);
     }
 
     public void StartTrick(Trick type)
@@ -219,6 +228,12 @@ public class ScoreManager : MonoBehaviour
         multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
     }
 
+    public int ScoreLocation()
+    {
+        ForceStopSet();
+        return currentLocationScore;
+    }
+
     IEnumerator AddToNumber(int startScore, int newScore)
     {
         int displayScore = startScore;
@@ -243,8 +258,8 @@ public class ScoreManager : MonoBehaviour
         return overallScore;
     }
 
-    public SpotInstance1[] GetSpots()
+    public SpotInstance1[] GetLocations()
     {
-        return spots;
+        return locations;
     }
 }

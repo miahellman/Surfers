@@ -102,7 +102,7 @@ public class GameManager : MonoBehaviour
                     break;
                 case GameState.END:
                     timerRunning = false;
-                    endScreen.SetScreen(ScoreManager.instance.GetOverallScore(), ScoreManager.instance.GetSpots());
+                    endScreen.SetScreen(ScoreManager.instance.GetOverallScore(), ScoreManager.instance.GetLocations());
                     player.DisableInput(true);
                     break;
 
