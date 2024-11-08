@@ -19,6 +19,8 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] TMP_Text locationScoreText;
     [SerializeField] Image multiplierRingFill;
     [SerializeField] TMP_Text multiplierText;
+    [SerializeField] TMP_Text wallrideLeftText;
+    [SerializeField] TMP_Text wallrideRightText;
     [SerializeField] float fillSpeed = 0.75f;
     //[SerializeField] TMP_Text overallScoreText;
     [SerializeField] float fadeRate = 0.75f;
@@ -50,7 +52,7 @@ public class ScoreManager : MonoBehaviour
     float activeTrickTime;
     int multiplierIndex = 0;
     float targetRingFill;
-
+    TMP_Text activeText;
 
     Coroutine resetCo;
 
@@ -58,7 +60,9 @@ public class ScoreManager : MonoBehaviour
     void Awake()
     {
         if (instance == null) { instance = this; }
-        durTrickText.text = " ";
+        durTrickText.text = "";
+        wallrideLeftText.text = "";
+        wallrideRightText.text = "";
         locationScoreText.text = currentLocationScore.ToString();
         setScoreText.text = setScore.ToString();
         //overallScoreText.text = overallScore.ToString();
@@ -71,7 +75,7 @@ public class ScoreManager : MonoBehaviour
         {
             activeTrickTime += Time.deltaTime;
 
-            durTrickText.text = string.Format("{0} {1:0.00}", activeTrick.trickName, activeTrickTime);
+            activeText.text = string.Format("{0} {1:0.00}", activeTrick.trickName, activeTrickTime);
         }
 
         for (int i = 0; i < trickList.Length; i++)
@@ -104,6 +108,21 @@ public class ScoreManager : MonoBehaviour
             // stop current trick, start new one
             StopTrick();
         }
+        activeText = durTrickText;
+        activeTrick = type;
+    }
+
+    public void StartTrick(Trick type, bool left)
+    {
+        if (!type.durationTrick) { Debug.LogWarning(type.trickName + " is not a duration trick. Use ScoreTrick() instead."); }
+        if (resetCo != null) { StopCoroutine(resetCo); }
+        if (activeTrick != null)
+        {
+            // stop current trick, start new one
+            StopTrick();
+        }
+        if (left) { activeText = wallrideLeftText; }
+        else { activeText = wallrideRightText; }
         activeTrick = type;
     }
 
@@ -113,7 +132,8 @@ public class ScoreManager : MonoBehaviour
         ScoreTrick(activeTrick, Mathf.FloorToInt(activeTrick.baseScore * activeTrickTime));
         activeTrick = null;
         activeTrickTime = 0;
-        durTrickText.text = " ";
+        activeText.text = "";
+        activeText = null;
     }
 
     public void ScoreTrick(Trick type, int value)
@@ -134,7 +154,6 @@ public class ScoreManager : MonoBehaviour
             if (setTricks >= nextThreshold)
             {
                 multiplierIndex++;
-                //print(multiplierIndex);
                 setTricks = 0;
                 multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
             }

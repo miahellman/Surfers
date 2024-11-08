@@ -219,6 +219,8 @@ public class SurfController : MonoBehaviour
                 {
                     // start grind
                     UpdateState(MovementState.GRIND);
+                    StopCoroutine(grindInputCo);
+                    grindInputActive = false;
                 }
                 break;
             case MovementState.GRIND:
@@ -299,7 +301,9 @@ public class SurfController : MonoBehaviour
                     rb.angularVelocity = Vector3.zero;
                     spinOutVector = Vector3.zero;
 
-                    ScoreManager.instance.StartTrick(TrickManager.Wallride);
+                    bool left = wallLeft ? false : true;
+
+                    ScoreManager.instance.StartTrick(TrickManager.Wallride, left);
                     break;
             }
         }
@@ -307,10 +311,97 @@ public class SurfController : MonoBehaviour
     }
 
     void ProcessStandardMovement()
-    {
-        #region jumping and grounded
-        if (!isGrounded) 
+    { 
+        #region flipping
+        if (flippingOn)
+        {
+            if (!isGrounded)
+            {
+                if (Mathf.Abs(Input.GetAxis("Flip")) > 0 || Mathf.Abs(Input.GetAxis("FlipMouse")) > 0)
+                {
+                    board.SetFlipActive(true);
+                    if (Mathf.Abs(Input.GetAxis("Flip")) > 0) { board.SetValue(Input.GetAxis("Flip")); }
+                    else { board.SetValue(Input.GetAxis("FlipMouse")); }
+
+                }
+                else
+                {
+                    board.SetFlipActive(false);
+                    board.SetValue(0);
+                }
+            }
+            else
+            {
+                board.SetFlipActive(false);
+                board.SetValue(0);
+            }
+        }
+        #endregion
+
+        #region velocity and acceleration
+        if (Input.GetAxis("Vertical") > 0 && !isBreaking && !inputDisabled) { baseVelocity += Input.GetAxis("Vertical") * accel * Time.deltaTime * localTimeScale; }
+        else { baseVelocity -= decel * Time.deltaTime * localTimeScale; }
+
+
+        if (Input.GetButtonDown("Boost") && boostsAvailable + additionalBoosts > 0)
+        {
+            if (boostsAvailable > 0)
+            {
+                boostsAvailable--;
+            }
+            else if (additionalBoosts > 0)
+            {
+                additionalBoosts--;
+            }
+            Boost(20, 50);
+            boostsText.text = "x" + (boostsAvailable + additionalBoosts);
+            boostParticles.Play();
+        }
+
+        if (additionalVelocity < additionalTarget && !isBreaking)
+        {
+            additionalVelocity += additionalAccel * Time.deltaTime * localTimeScale;
+        }
+        else
+        {
+            // if target velocity reached
+            additionalTargetReached = true;
+            additionalTarget = 0;
+        }
+
+        if (additionalTargetReached)
+        {
+            additionalVelocity -= (decel) * Time.deltaTime * localTimeScale;
+        }
+
+        if (isBreaking) 
         { 
+            baseVelocity -= curBreakDecel * Time.deltaTime * localTimeScale; 
+            additionalVelocity -= curBreakDecel * Time.deltaTime * localTimeScale;
+            curBreakDecel += breakDecelRate * Time.deltaTime * localTimeScale;
+        }
+        else
+        {
+            curBreakDecel = breakDecelBase;
+        }
+
+        baseVelocity = Mathf.Clamp(baseVelocity, 0, maxSpeed);
+        additionalVelocity = Mathf.Max(0, additionalVelocity);
+
+        // always push spin out force to zero
+        spinOutVector = Vector3.Lerp(spinOutVector, Vector3.zero, spinOutRecovery * Time.deltaTime * localTimeScale);
+        additionalForce = Vector3.Lerp(additionalForce, Vector3.zero, 5 * Time.deltaTime * localTimeScale);
+
+        finalCalculatedVelocity = (baseVelocity + additionalVelocity) * transform.forward + spinOutVector + additionalForce + (Vector3.up * jumpVelocity);
+
+        rb.velocity = finalCalculatedVelocity * localTimeScale;
+        #endregion
+
+
+
+        #region jumping and grounded
+        if (!isGrounded)
+        {
             jumpVelocity -= curGravity * gravityMultiplier * Time.deltaTime * localTimeScale;
             curGravity += gravityMultiplier * Time.deltaTime * localTimeScale;
         }
@@ -318,6 +409,30 @@ public class SurfController : MonoBehaviour
         {
             curGravity = gravityValue;
         }
+
+        if (!isGrounded)
+        {
+
+            //here we need to check for collisions slightly differently when the player is in the air!
+
+            RaycastHit[] hits = Physics.SphereCastAll(transform.position,
+                1,
+                rb.velocity,
+                1,
+                floorRaycastLayers);
+
+
+            Debug.Log(hits.Length + Time.realtimeSinceStartupAsDouble);
+
+            if (hits.Length > 0)
+            {
+                rb.velocity = Vector3.zero;
+
+                //Debug.Log(hits[0].collider.name + Time.realtimeSinceStartupAsDouble);
+
+            }
+        }
+
 
         RaycastHit hit;
         if (arcCast.ArcCast(transform.position, transform.rotation, arcCast.arcAngle, groundedDist, arcCast.arcResolution, floorRaycastLayers, out hit) && jumpVelocity <= 0)
@@ -327,6 +442,12 @@ public class SurfController : MonoBehaviour
             RaycastHit secondHit;
             if (Physics.Raycast(rb.position + transform.up, -transform.up, out secondHit, groundedDist + 1, floorRaycastLayers))
             {
+                //LOG 1: I have the theory that the player's downward velocity is too darn high!
+                //Lets try setting the velocity to 0.
+
+                //rb.velocity = Vector3.zero;
+                //rb.angularVelocity = Vector3.zero;
+
                 if (dotProduct > dotTolerance)
                 {
                     WallrideObject wallride; // so can't get grounded on a wallride surface
@@ -358,7 +479,7 @@ public class SurfController : MonoBehaviour
 
                     if (secondHit.collider.tag == "Floor")
                     {
-                        lastGroundPoint.pos = secondHit.collider.ClosestPointOnBounds(transform.position) + (transform.up * hoverHeight * 3f);
+                        lastGroundPoint.pos = transform.position;
                         lastGroundPoint.rot = transform.rotation;
                     }
                 }
@@ -412,91 +533,6 @@ public class SurfController : MonoBehaviour
 
         #endregion
 
-        #region flipping
-        if (flippingOn)
-        {
-            if (!isGrounded)
-            {
-                if (Mathf.Abs(Input.GetAxis("Flip")) > 0 || Mathf.Abs(Input.GetAxis("FlipMouse")) > 0)
-                {
-                    board.SetFlipActive(true);
-                    if (Mathf.Abs(Input.GetAxis("Flip")) > 0) { board.SetValue(Input.GetAxis("Flip")); }
-                    else { board.SetValue(Input.GetAxis("FlipMouse")); }
-
-                }
-                else
-                {
-                    board.SetFlipActive(false);
-                    board.SetValue(0);
-                }
-            }
-            else
-            {
-                board.SetFlipActive(false);
-                board.SetValue(0);
-            }
-        }
-        #endregion
-
-        #region velocity and acceleration
-        if (Input.GetAxis("Vertical") > 0 && !isBreaking && !inputDisabled) { baseVelocity += Input.GetAxis("Vertical") * accel * Time.deltaTime * localTimeScale; }
-        else { baseVelocity -= decel * Time.deltaTime * localTimeScale; }
-
-
-        if (Input.GetButtonDown("Boost") && boostsAvailable + additionalBoosts > 0)
-        {
-            if (boostsAvailable > 0)
-            {
-                boostsAvailable--;
-            }
-            else if (additionalBoosts > 0)
-            {
-                additionalBoosts--;
-            }
-            Boost(45, 50);
-            boostsText.text = "x" + (boostsAvailable + additionalBoosts);
-            boostParticles.Play();
-        }
-
-        if (additionalVelocity < additionalTarget && !isBreaking)
-        {
-            additionalVelocity += additionalAccel * Time.deltaTime * localTimeScale;
-        }
-        else
-        {
-            // if target velocity reached
-            additionalTargetReached = true;
-            additionalTarget = 0;
-        }
-
-        if (additionalTargetReached)
-        {
-            additionalVelocity -= (decel) * Time.deltaTime * localTimeScale;
-        }
-
-        if (isBreaking) 
-        { 
-            baseVelocity -= curBreakDecel * Time.deltaTime * localTimeScale; 
-            additionalVelocity -= curBreakDecel * Time.deltaTime * localTimeScale;
-            curBreakDecel += breakDecelRate * Time.deltaTime * localTimeScale;
-        }
-        else
-        {
-            curBreakDecel = breakDecelBase;
-        }
-
-        baseVelocity = Mathf.Clamp(baseVelocity, 0, maxSpeed);
-        additionalVelocity = Mathf.Max(0, additionalVelocity);
-
-        // always push spin out force to zero
-        spinOutVector = Vector3.Lerp(spinOutVector, Vector3.zero, spinOutRecovery * Time.deltaTime * localTimeScale);
-        additionalForce = Vector3.Lerp(additionalForce, Vector3.zero, 5 * Time.deltaTime * localTimeScale);
-
-        finalCalculatedVelocity = (baseVelocity + additionalVelocity) * transform.forward + spinOutVector + additionalForce + (Vector3.up * jumpVelocity);
-
-        rb.velocity = finalCalculatedVelocity * localTimeScale;
-        #endregion
-
         float horInput = Input.GetAxisRaw("Horizontal");
 
         #region breaking
@@ -548,10 +584,14 @@ public class SurfController : MonoBehaviour
         if (!isGrounded)
         {
 
-            Quaternion currentToVelocityForward = Quaternion.FromToRotation(transform.forward, rb.velocity.normalized) * transform.rotation;
-            Quaternion slerpedVelocityAlignmentRot = Quaternion.Slerp(transform.rotation, currentToVelocityForward, .008f);
+            Vector3 sideDirection = Vector3.Cross(rb.velocity.normalized, Vector3.up).normalized;
+            Vector3 upDirection = Vector3.Cross(sideDirection, rb.velocity.normalized).normalized;
 
-            //transform.rotation = slerpedVelocityAlignmentRot;
+            //Quaternion currentToVelocityForward = Quaternion.FromToRotation(transform.forward, rb.velocity.normalized) * transform.rotation;
+            Quaternion currentToVelocityForward = Quaternion.LookRotation(rb.velocity.normalized, upDirection); ;
+            Quaternion slerpedVelocityAlignmentRot = Quaternion.Slerp(rb.rotation, currentToVelocityForward, 2f * Time.deltaTime * localTimeScale);
+
+            rb.rotation = slerpedVelocityAlignmentRot;
 
         }
 
