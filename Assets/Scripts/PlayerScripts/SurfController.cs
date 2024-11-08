@@ -143,7 +143,7 @@ public class SurfController : MonoBehaviour
         board = GetComponentInChildren<BoardGraphics>();
         arcCast = GetComponent<ArcCastComponent>();
         graphics = transform.GetChild(0).gameObject;
-        //outliner = FindObjectOfType<Outliner>();
+        outliner = FindObjectOfType<Outliner>();
 
         //boostsAvailable = baseBoostAmount;
         //boostsText.text = "x" + (boostsAvailable + additionalBoosts);
@@ -422,7 +422,7 @@ public class SurfController : MonoBehaviour
                 floorRaycastLayers);
 
 
-            Debug.Log(hits.Length + Time.realtimeSinceStartupAsDouble);
+            //Debug.Log(hits.Length + Time.realtimeSinceStartupAsDouble);
 
             if (hits.Length > 0)
             {
@@ -843,7 +843,7 @@ public class SurfController : MonoBehaviour
         {
             //leftWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
             angleDiff = Vector3.Angle(leftWallHit.normal, transform.right);
-            if (angleDiff <= maxWallrideAgleDiff) { outliner.SetOutlineObject(leftWallHit.collider.gameObject); return true; }
+            if (angleDiff <= maxWallrideAgleDiff && outliner != null) { outliner.SetOutlineObject(leftWallHit.collider.gameObject); return true; }
             else { return false; }
             //if (leftWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(leftWallHit.normal)) { return true; }
             //else { return false; } 
@@ -852,7 +852,7 @@ public class SurfController : MonoBehaviour
         {
             //rightWallHit.collider.GetComponent<WallrideObject>().HighlightColor(true);
             angleDiff = Vector3.Angle(rightWallHit.normal, -transform.right);
-            if (angleDiff <= maxWallrideAgleDiff) { outliner.SetOutlineObject(rightWallHit.collider.gameObject); return true; }
+            if (angleDiff <= maxWallrideAgleDiff && outliner != null) { outliner.SetOutlineObject(rightWallHit.collider.gameObject); return true; }
             else { return false; }
             //if (rightWallHit.collider.GetComponent<WallrideObject>().CheckValidNormal(rightWallHit.normal)) { return true; }
             //else { return false; }
