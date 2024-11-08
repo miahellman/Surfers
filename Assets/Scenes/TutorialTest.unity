@@ -280,9 +280,9 @@ MonoBehaviour:
     width: 1114
     height: 859
   selectedBlocks:
-  - {fileID: 79437410}
+  - {fileID: 79437414}
   selectedCommands:
-  - {fileID: 79437421}
+  - {fileID: 79437437}
   variables: []
   description: 
   stepPause: 0
@@ -1390,7 +1390,7 @@ MonoBehaviour:
   itemId: 43
   indentLevel: 0
   description: 
-  targetObject: {fileID: 0}
+  targetObject: {fileID: 298486961}
   targetComponentAssemblyName: GameManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
     PublicKeyToken=null
   targetComponentFullname: UnityEngine.Component[]
@@ -1435,7 +1435,7 @@ MonoBehaviour:
   itemId: 44
   indentLevel: 0
   description: 
-  targetObject: {fileID: 0}
+  targetObject: {fileID: 298486961}
   targetComponentAssemblyName: GameManager, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
     PublicKeyToken=null
   targetComponentFullname: UnityEngine.Component[]
@@ -1585,6 +1585,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b5755b94035466a4dac0983195d8ecf1, type: 3}
+--- !u!1 &298486961 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7289860363472550413, guid: b5755b94035466a4dac0983195d8ecf1, type: 3}
+  m_PrefabInstance: {fileID: 209705693}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &298915241
 GameObject:
   m_ObjectHideFlags: 0
