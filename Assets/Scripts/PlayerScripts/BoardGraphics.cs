@@ -17,8 +17,6 @@ public class BoardGraphics : MonoBehaviour
     float targetRot;
     float adjustDir;
 
-    Animator anim;
-
     public enum FlipState { FLIPPING, ADJUSTING, IDLE, FAILED };
     FlipState flipState = FlipState.IDLE;
 
@@ -111,6 +109,12 @@ public class BoardGraphics : MonoBehaviour
                 int rotations = Mathf.Abs(Mathf.RoundToInt(targetRot / 360));
                 Trick trick = TrickManager.Kickflip;
                 ScoreManager.instance.ScoreTrick(trick, trick.baseScore * rotations);
+                AudioManager.instance.PlaySound("kickflip stop");
+            }
+            else
+            {
+                AudioManager.instance.PlaySound("kickflip miss");
+                FindObjectOfType<SurfController>().MissFlip();
             }
 
             //if (CheckSuccess())
@@ -129,6 +133,7 @@ public class BoardGraphics : MonoBehaviour
         // start flip
         else if (!flipping && active) 
         {
+            AudioManager.instance.PlaySound("kickflip start");
             flipState = FlipState.FLIPPING;
             flipping = true;
         }

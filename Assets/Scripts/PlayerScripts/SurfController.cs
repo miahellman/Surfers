@@ -60,7 +60,6 @@ public class SurfController : MonoBehaviour
     // upwards velocity
     float jumpVelocity;
     
-
     [Header("Grinding")]
     [SerializeField] Vector3 grindDetectBox = new Vector3(5.3f, 3f, 10f);
     [SerializeField] float grindAngleDiff = 60f;
@@ -83,6 +82,7 @@ public class SurfController : MonoBehaviour
     Collider validCollider;
     Vector3 lastPosition; // for checking collision
     LastGroundPoint lastGroundPoint = new LastGroundPoint();
+    Vector3 unstuckPosition;
     [SerializeField] public Outliner outliner;
 
     // wallride
@@ -101,6 +101,9 @@ public class SurfController : MonoBehaviour
 
     BoardGraphics board;
     Rigidbody rb;
+    [Header("Animation")]
+    [SerializeField] Animator characterAnim;
+    [SerializeField] Animator reyAnim;
 
     // forward velocity
     float baseVelocity;
@@ -134,6 +137,7 @@ public class SurfController : MonoBehaviour
     bool stateUpdated = false;
 
     bool inputDisabled = false;
+    bool flipStopped = false;
     float localTimeScale = 1;
 
     // Start is called before the first frame update
@@ -151,12 +155,16 @@ public class SurfController : MonoBehaviour
 
         curBoardRoll = graphics.transform.localEulerAngles.z;
         curBoardYaw = graphics.transform.localEulerAngles.y;
+
+        unstuckPosition = transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
         BoostCooldown();
+
+        reyAnim.SetFloat("speed", Mathf.Abs(rb.velocity.magnitude));
 
         if (Input.GetButtonDown("Unstuck") && !inputDisabled) { Unstuck(); }
 
@@ -262,9 +270,16 @@ public class SurfController : MonoBehaviour
             switch (movementState)
             {
                 case MovementState.STANDARD:
+                    flipStopped = false;
+                    characterAnim.SetBool("grinding", false);
                     RumbleManager.instance.SetRumbleActive(false);
                     break;
                 case MovementState.GRIND:
+                    curSpinOutOffset = 0;
+                    isSpinningOut = false;
+                    characterAnim.SetBool("spinningOut", false);
+
+                    characterAnim.SetBool("grinding", true);
                     canGrind = false;
                     rb.angularVelocity = Vector3.zero;
                     spinOutVector = Vector3.zero;
@@ -274,6 +289,13 @@ public class SurfController : MonoBehaviour
                     ScoreManager.instance.StartTrick(TrickManager.Grind);
                     break;
                 case MovementState.WALLRIDE:
+                    AudioManager.instance.PlaySound("wall splash");
+                    curSpinOutOffset = 0;
+                    isSpinningOut = false;
+                    characterAnim.SetBool("spinningOut", false);
+
+                    characterAnim.SetBool("grinding", false);
+
                     Vector3 attachPoint;
                     // TODO if wall on left and right, need to choose which one is closer, OR just dont design level like that...
                     if (wallLeft)
@@ -296,6 +318,8 @@ public class SurfController : MonoBehaviour
                     //rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
                     //transform.position = new Vector3(transform.position.x, curWallRide.point.y + hoverHeight, transform.position.z);
                     transform.position = attachPoint;
+                    //Quaternion.Slerp(transform.rotation, initTargetRot, floorRotSpeed * 2f * Time.deltaTime * localTimeScale)
+                    transform.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
                     graphics.transform.localEulerAngles = Vector3.zero;
                     startRot = transform.rotation;
                     rb.angularVelocity = Vector3.zero;
@@ -311,14 +335,19 @@ public class SurfController : MonoBehaviour
     }
 
     void ProcessStandardMovement()
-    { 
+    {
         #region flipping
         if (flippingOn)
         {
             if (!isGrounded)
             {
-                if (Mathf.Abs(Input.GetAxis("Flip")) > 0 || Mathf.Abs(Input.GetAxis("FlipMouse")) > 0)
+                if (flipStopped)
                 {
+                    if (Input.GetAxis("Flip") == 0) { flipStopped = false; }
+                }
+                else if (Mathf.Abs(Input.GetAxis("Flip")) > 0 || Mathf.Abs(Input.GetAxis("FlipMouse")) > 0)
+                {
+                    characterAnim.SetBool("flipping", true);
                     board.SetFlipActive(true);
                     if (Mathf.Abs(Input.GetAxis("Flip")) > 0) { board.SetValue(Input.GetAxis("Flip")); }
                     else { board.SetValue(Input.GetAxis("FlipMouse")); }
@@ -326,12 +355,26 @@ public class SurfController : MonoBehaviour
                 }
                 else
                 {
+                    characterAnim.SetBool("flipping", false);
+                    if (!board.CheckSuccess())
+                    {
+                        characterAnim.SetTrigger("mistake");
+                        baseVelocity *= 0.3f;
+                        additionalVelocity *= 0.3f;
+                    }
                     board.SetFlipActive(false);
                     board.SetValue(0);
                 }
             }
             else
             {
+                characterAnim.SetBool("flipping", false);
+                if (!board.CheckSuccess())
+                {
+                    characterAnim.SetTrigger("mistake");
+                    baseVelocity *= 0.3f;
+                    additionalVelocity *= 0.3f;
+                }
                 board.SetFlipActive(false);
                 board.SetValue(0);
             }
@@ -374,9 +417,9 @@ public class SurfController : MonoBehaviour
             additionalVelocity -= (decel) * Time.deltaTime * localTimeScale;
         }
 
-        if (isBreaking) 
-        { 
-            baseVelocity -= curBreakDecel * Time.deltaTime * localTimeScale; 
+        if (isBreaking)
+        {
+            baseVelocity -= curBreakDecel * Time.deltaTime * localTimeScale;
             additionalVelocity -= curBreakDecel * Time.deltaTime * localTimeScale;
             curBreakDecel += breakDecelRate * Time.deltaTime * localTimeScale;
         }
@@ -396,8 +439,6 @@ public class SurfController : MonoBehaviour
 
         rb.velocity = finalCalculatedVelocity * localTimeScale;
         #endregion
-
-
 
         #region jumping and grounded
         if (!isGrounded)
@@ -472,6 +513,7 @@ public class SurfController : MonoBehaviour
                     // if mid flip when hitting ground
                     if (board.State() == BoardGraphics.FlipState.FLIPPING && !board.CheckSuccess())
                     {
+                        flipStopped = true;
                         jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
                         baseVelocity *= 0.3f;
                         additionalVelocity *= 0.3f;
@@ -527,6 +569,8 @@ public class SurfController : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && isGrounded && !inputDisabled)
         {
+            reyAnim.SetTrigger("jump");
+            AudioManager.instance.PlaySound("jump");
             jumpVelocity = Mathf.Sqrt(jumpForce * gravityValue);
             isGrounded = false;
         }
@@ -536,7 +580,7 @@ public class SurfController : MonoBehaviour
         float horInput = Input.GetAxisRaw("Horizontal");
 
         #region breaking
-        if (Input.GetAxis("Break") < 0 || Input.GetButton("Break") && !inputDisabled)
+        if (Input.GetAxis("Break") < 0 || Input.GetButton("Break") && !inputDisabled && baseVelocity > 0.5f)
         {
             if (!isBreaking)
             {
@@ -544,19 +588,23 @@ public class SurfController : MonoBehaviour
                 isBreaking = true;
                 if (Mathf.Abs(rb.angularVelocity.y) > 0) { breakTurnDir = Mathf.Sign(rb.angularVelocity.y); } // which way we were turning 
                 turnVelocity *= 0.8f;
+                characterAnim.SetBool("breaking", true);
             }
         }
         else
         {
             isBreaking = false;
+            characterAnim.SetBool("breaking", false);
         }
 
         if (isBreaking)
         {
+            reyAnim.SetFloat("steerValue", horInput);
             turnVelocity = Mathf.MoveTowards(turnVelocity, 0, breakTurnDecel * Time.deltaTime * localTimeScale);
         }
         else if (Mathf.Abs(horInput) > 0 && !isBreaking && !inputDisabled)
         {
+            reyAnim.SetFloat("steerValue", horInput);
             if (turnVelocity < initTurnSpeed) { turnVelocity += initTurnAccel * Time.deltaTime * localTimeScale; }
             else { turnVelocity += turnAccel * Time.deltaTime * localTimeScale; }
         }
@@ -615,6 +663,7 @@ public class SurfController : MonoBehaviour
 
         if (isSpinningOut)
         {
+            characterAnim.SetBool("spinningOut", true);
             if (Mathf.Abs(curSpinOutOffset) < spinOutOffset)
             {
                 // spin out rate decreases over time to emulate natural force
@@ -626,6 +675,7 @@ public class SurfController : MonoBehaviour
             }
             else
             {
+                characterAnim.SetBool("spinningOut", false);
                 isSpinningOut = false;
             }
         }
@@ -673,7 +723,7 @@ public class SurfController : MonoBehaviour
     void ProcessWallrideMovement()
     {
         rb.velocity = transform.forward * (baseVelocity + additionalVelocity);
-
+        rb.rotation = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
         Quaternion initTargetRot = Quaternion.FromToRotation(transform.up, curWallRide.normal) * transform.rotation;
         Quaternion initSlerpedRot = Quaternion.Slerp(transform.rotation, initTargetRot, floorRotSpeed * 2f * Time.deltaTime * localTimeScale);
         float rotDist = Vector3.Distance(initTargetRot.eulerAngles, initSlerpedRot.eulerAngles); // gets initial rotation, facing wall
@@ -696,12 +746,12 @@ public class SurfController : MonoBehaviour
         rb.angularVelocity = yaw * transform.up;
 
         RaycastHit hit;
-        if (rotDist > 10)
-        {
-            rb.rotation = initSlerpedRot;
-            //transform.position =  + (transform.up * hoverHeight);
-        }
-        else if (Physics.Raycast(transform.position, -transform.up, out hit, wallRideDist, LayerMask.GetMask("Wallride")))
+        //if (rotDist > 10)
+        //{
+        //    rb.rotation = initSlerpedRot;
+        //    //transform.position =  + (transform.up * hoverHeight);
+        //}
+        if (Physics.Raycast(transform.position, -transform.up, out hit, wallRideDist, LayerMask.GetMask("Wallride")))
         {
             if (hit.collider == curWallRide.collider)
             {
@@ -912,6 +962,7 @@ public class SurfController : MonoBehaviour
                     float rumbleMultiplier = Mathf.Abs(finalCalculatedVelocity.magnitude);
                     rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
                     RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
+                    AudioManager.instance.PlaySound("hit wall", volume: 0.5f);
                 }
             }
         }
@@ -946,6 +997,7 @@ public class SurfController : MonoBehaviour
                 float rumbleMultiplier = Mathf.Abs(finalCalculatedVelocity.magnitude);
                 rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
                 RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
+                AudioManager.instance.PlaySound("hit wall", volume: 0.5f);
             }
         }
 
@@ -974,17 +1026,25 @@ public class SurfController : MonoBehaviour
                     float rumbleMultiplier = Mathf.Abs(finalCalculatedVelocity.magnitude);
                     rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
                     RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
+                    AudioManager.instance.PlaySound("hit wall", volume: 0.5f);
                 }
             }
         }
         lastPosition = transform.position;
     }
 
+    public void MissFlip()
+    {
+        characterAnim.SetTrigger("mistake");
+    }
+
     public void Unstuck()
     {
-        FindObjectOfType<BoundingCube>().WarpPlayer();
+        //transform.position = FindObjectOfType<BoundingCube>().WarpPlayer(false);
+        print(unstuckPosition);
         baseVelocity = 0;
         additionalVelocity = 0;
+        transform.position = unstuckPosition;
         jumpVelocity = 0;
         transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
     }
@@ -1039,5 +1099,24 @@ public class SurfController : MonoBehaviour
         Gizmos.color = Color.blue;
         Gizmos.matrix = Matrix4x4.TRS(transform.position + interactableBox.RelativeBoxPosition(transform), transform.rotation, interactableBox.boxSize);
         Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        SpotInstance1 spot;
+        if (other.TryGetComponent<SpotInstance1>(out spot))
+        {
+            ScoreManager.instance.SetCurrentLocation(spot);
+            unstuckPosition = spot.transform.position + new Vector3(0, 2, 0);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        SpotInstance1 spot;
+        if (other.TryGetComponent<SpotInstance1>(out spot))
+        {
+            ScoreManager.instance.ScoreLocation();
+        }
     }
 }

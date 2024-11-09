@@ -13,9 +13,11 @@ public class ScoreManager : MonoBehaviour
     [SerializeField] int[] multiplierThresholds;
 
     SpotInstance1 currentLocation;
+    int locationIndex;
 
     [Header("UI")]
     [SerializeField] GameObject canvas;
+    [SerializeField] TMP_Text locationNameText;
     [SerializeField] TMP_Text durTrickText;
     [SerializeField] TMP_Text setScoreText;
     [SerializeField] TMP_Text locationScoreText;
@@ -70,7 +72,7 @@ public class ScoreManager : MonoBehaviour
         locationScoreText.text = currentLocationScore.ToString();
         setScoreText.text = setScore.ToString();
 
-        for (int i = 0; i < locationCards.Length - 1; i++)
+        for (int i = 0; i < locationCards.Length; i++)
         {
             locationCards[i].SetCard(locations[i].spotName);
         }
@@ -84,7 +86,8 @@ public class ScoreManager : MonoBehaviour
         {
             activeTrickTime += Time.deltaTime;
 
-            activeText.text = string.Format("{0} {1:0.00}", activeTrick.trickName, activeTrickTime);
+            activeText.text = string.Format("{0} {1:0}", activeTrick.trickName, activeTrick.baseScore* activeTrickTime);
+            //activeText.text = string.Format("{0} {1:0.00}", activeTrick.trickName, activeTrickTime);
         }
 
         for (int i = 0; i < trickList.Length; i++)
@@ -228,9 +231,28 @@ public class ScoreManager : MonoBehaviour
         multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
     }
 
+    public void SetCurrentLocation(SpotInstance1 location)
+    {
+        currentLocation = location;
+        locationNameText.text = location.spotName.ToUpper();
+        for (int i = 0; i < locations.Length; i++)
+        {
+            if (locations[i] == location)
+            {
+                locationIndex = i;
+            }
+        }
+    }
+
     public int ScoreLocation()
     {
         ForceStopSet();
+        currentLocation.ProcessNewScore(currentLocationScore, "Player");
+        if (currentLocation.highScore < currentLocationScore) { locationCards[locationIndex].UpdateCard(currentLocationScore); }
+        locationCards[locationIndex].SetOwned(currentLocation.currentOwner == "Player");
+
+        currentLocation = null;
+        
         return currentLocationScore;
     }
 

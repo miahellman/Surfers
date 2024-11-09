@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Burst.CompilerServices;
-using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -21,6 +20,7 @@ public class UpgradedCamera : MonoBehaviour
     [Header("Grinding Behavior")]
     public float grindingCameraOffsetY = 0;
     public float grindingCameraOffsetZ = 4;
+    public float grindingCameraOffsetX = 4;
 
     [Header("Airborne Behavior")]
     public float airborneCameraOffsetZ = 10;
@@ -43,6 +43,7 @@ public class UpgradedCamera : MonoBehaviour
 
     float currentCamOffsetZ = 0;
     float currentCamOffsetY = 0;
+    float currentCamOffsetX = 0;
 
     //The ray is coded to bounce and reflect off of walls and slanted floors, and the camera prioritize focusing on those reflected points instead.
     //This is how long the subsequent raycasts will be, when we reflect the original ray off of walls and ramps.
@@ -99,7 +100,7 @@ public class UpgradedCamera : MonoBehaviour
                 break;
 
             case SurfController.MovementState.GRIND:
-
+                grindBehavior();
                 break;
 
 
@@ -129,6 +130,7 @@ public class UpgradedCamera : MonoBehaviour
 
 
         transform.position = playerTransform.position + customUpDirection * currentCamOffsetY;
+        //transform.position = playerTransform.position + playerTransform.right * currentCamOffsetX;
 
         zoomTransform.localPosition = -Vector3.forward * currentCamOffsetZ;
 
@@ -161,6 +163,7 @@ public class UpgradedCamera : MonoBehaviour
     {
         currentCamOffsetY = groundedCameraOffsetY;
         currentCamOffsetZ = groundedCameraOffsetZ;
+        currentCamOffsetX = 0;
 
         customUpDirection = Vector3.up;
     }
@@ -170,6 +173,7 @@ public class UpgradedCamera : MonoBehaviour
     {
         currentCamOffsetY = airborneCameraOffsetY;
         currentCamOffsetZ = airborneCameraOffsetZ;
+        currentCamOffsetX = 0;
 
         customUpDirection = Vector3.up;
     }
@@ -191,6 +195,7 @@ public class UpgradedCamera : MonoBehaviour
         }
         currentCamOffsetY = wallrideWallOffset;
         currentCamOffsetZ = wallrideCameraOffsetZ;
+        currentCamOffsetX = 0;
 
     }
 
@@ -199,7 +204,7 @@ public class UpgradedCamera : MonoBehaviour
 
         currentCamOffsetY = grindingCameraOffsetY;
         currentCamOffsetZ = grindingCameraOffsetZ;
-
+        currentCamOffsetX = grindingCameraOffsetX;
     }
 
 

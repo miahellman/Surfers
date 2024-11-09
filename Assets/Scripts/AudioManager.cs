@@ -7,8 +7,8 @@ public class AudioManager : MonoBehaviour
     [System.Serializable]
     public class Sound
     {
-        public AudioClip clip;
         public string name;
+        public AudioClip clip;
     }
 
     [SerializeField] Sound[] sounds;
@@ -20,10 +20,10 @@ public class AudioManager : MonoBehaviour
     void Start()
     {
         source = GetComponent<AudioSource>();
-        instance = this;
+        if (instance == null) { instance = this; }
     }
 
-    public void PlaySound(string _name, float volume = 0.5f, float pitch = 1f, bool randomPitch = false)
+    public void PlaySound(string _name, float volume = 0.75f, float pitch = 1f, bool randomPitch = false)
     {
         foreach (Sound sound in sounds)
         {
@@ -40,8 +40,29 @@ public class AudioManager : MonoBehaviour
                 }
 
                 source.PlayOneShot(sound.clip, volume);
-                break;
+                return;
             }
         }
+        Debug.LogWarning(_name + " is not a valid sound in AudioManager");
     }
+
+    public void PlayGrind()
+    {
+        source.Play();
+    }
+
+    public void StopGrind()
+    {
+        source.Stop();
+    }
+
+    //public void PlayContinuousSound(string _name, float volume = 0.75f, float pitch = 1f, bool randomPitch = false)
+    //{
+        
+    //}
+
+    //public void StopContinuousSound()
+    //{
+    //    source.Stop();
+    //}
 }

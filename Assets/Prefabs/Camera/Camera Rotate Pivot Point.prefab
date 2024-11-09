@@ -78,16 +78,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 0}
   wallrideWallOffset: 8
-  wallrideCameraOffsetZ: 8
+  wallrideCameraOffsetZ: 3.73
   grindingCameraOffsetY: 0
-  grindingCameraOffsetZ: 4
+  grindingCameraOffsetZ: 2.84
+  grindingCameraOffsetX: 4.45
   airborneCameraOffsetZ: 10
   airborneCameraOffsetY: 0
   airborneBehaviorGroundDistThreshold: 25
   floorRaycastLayers:
     serializedVersion: 2
     m_Bits: 1049075
-  groundedCameraOffsetZ: 6.3
+  groundedCameraOffsetZ: 4.96
   groundedCameraOffsetY: 0.3
   focusRayLength: 8
   afterBounceLength: 6
