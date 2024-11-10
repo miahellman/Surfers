@@ -17,6 +17,7 @@ public class ScoreManager : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] GameObject canvas;
+    [SerializeField] public TMP_Text timerText;
     [SerializeField] TMP_Text locationNameText;
     [SerializeField] TMP_Text durTrickText;
     [SerializeField] TMP_Text setScoreText;
@@ -71,10 +72,14 @@ public class ScoreManager : MonoBehaviour
         wallrideRightText.text = "";
         locationScoreText.text = currentLocationScore.ToString();
         setScoreText.text = setScore.ToString();
+        locationNameText.text = "";
 
-        for (int i = 0; i < locationCards.Length; i++)
+        if (locations.Length > 0)
         {
-            locationCards[i].SetCard(locations[i].spotName);
+            for (int i = 0; i < locationCards.Length; i++)
+            {
+                locationCards[i].SetCard(locations[i].spotName);
+            }
         }
         //overallScoreText.text = overallScore.ToString();
     }
@@ -98,12 +103,13 @@ public class ScoreManager : MonoBehaviour
                 //trickList[i].alpha -= fadeRate * Time.deltaTime;
 
                 Color color = trickTexts[i].color;
-                trickTexts[i].color = new Color(color.r, color.g, color.b, trickList[i].alpha);
+                //trickTexts[i].color = new Color(color.r, color.g, color.b, trickList[i].alpha);
             }
             else
             {
+                trickTexts[i].text = "";
                 Color color = trickTexts[i].color;
-                trickTexts[i].color = new Color(color.r, color.g, color.b, 0);
+                //trickTexts[i].color = new Color(color.r, color.g, color.b, 0);
             }
         }
 
@@ -213,7 +219,7 @@ public class ScoreManager : MonoBehaviour
 
     public void ForceStopSet()
     {
-        StopCoroutine(resetCo);
+        if (resetCo != null) { StopCoroutine(resetCo); }
         setActive = false;
         ScoreSet();
     }
@@ -237,6 +243,8 @@ public class ScoreManager : MonoBehaviour
     {
         currentLocation = location;
         locationNameText.text = location.spotName.ToUpper();
+        locationNameText.GetComponent<Animation>().Play();
+        AudioManager.instance.PlaySound("location", volume: 0.8f);
         for (int i = 0; i < locations.Length; i++)
         {
             if (locations[i] == location)
@@ -249,11 +257,19 @@ public class ScoreManager : MonoBehaviour
     public int ScoreLocation()
     {
         ForceStopSet();
-        currentLocation.ProcessNewScore(currentLocationScore, "Player");
-        if (currentLocation.highScore < currentLocationScore) { locationCards[locationIndex].UpdateCard(currentLocationScore); }
-        locationCards[locationIndex].SetOwned(currentLocation.currentOwner == "Player");
+        if (currentLocation != null)
+        {
+            if (currentLocation.highScore < currentLocationScore) { locationCards[locationIndex].UpdateCard(currentLocationScore); }
+            currentLocation.ProcessNewScore(currentLocationScore, "Player");
+            locationNameText.text = "";
+            //locationCards[locationIndex].SetOwned(currentLocation.currentOwner == "Player");
 
-        currentLocation = null;
+            currentLocation = null;
+        } 
+        else
+        {
+            Debug.LogWarning("Current location is null, most likely overlapping locations");
+        }
         
         return currentLocationScore;
     }

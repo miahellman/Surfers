@@ -25,7 +25,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7862610824869197380}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 500, y: 381.67, z: 500}
   m_ConstrainProportionsScale: 0
@@ -46,3 +46,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 0}
   gizmoCubeOpacity: 0.5
+  distFromBounds: 0
+  beginFadeDist: 20
+  screenShroud: {fileID: 0}
+  screenFadeProgress: 0
+  fadeMaterial: {fileID: 2100000, guid: 9fce856aeab9f6847bf1d3130a822aab, type: 2}

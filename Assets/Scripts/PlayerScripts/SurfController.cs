@@ -101,9 +101,11 @@ public class SurfController : MonoBehaviour
 
     BoardGraphics board;
     Rigidbody rb;
-    [Header("Animation")]
+    [Header("Animation and Effects")]
     [SerializeField] Animator characterAnim;
     [SerializeField] Animator reyAnim;
+    [SerializeField] ParticleSystem leftTrail;
+    [SerializeField] ParticleSystem rightTrail;
 
     // forward velocity
     float baseVelocity;
@@ -165,8 +167,6 @@ public class SurfController : MonoBehaviour
         BoostCooldown();
 
         reyAnim.SetFloat("speed", Mathf.Abs(rb.velocity.magnitude));
-
-        if (Input.GetKeyDown(KeyCode.F)) { ScreenShake.instance.ShakeScreen(1.25f, 0.25f); }
 
         if (Input.GetButtonDown("Unstuck") && !inputDisabled) { Unstuck(); }
 
@@ -292,6 +292,7 @@ public class SurfController : MonoBehaviour
                     ScoreManager.instance.StartTrick(TrickManager.Grind);
                     break;
                 case MovementState.WALLRIDE:
+                    SetTrailActive(true);
                     AudioManager.instance.PlaySound("wall splash");
                     curSpinOutOffset = 0;
                     isSpinningOut = false;
@@ -371,13 +372,12 @@ public class SurfController : MonoBehaviour
             }
             else
             {
-                characterAnim.SetBool("flipping", false);
-                if (!board.CheckSuccess())
+                if (flipStopped)
                 {
-                    characterAnim.SetTrigger("mistake");
-                    baseVelocity *= 0.3f;
-                    additionalVelocity *= 0.3f;
+                    if (Input.GetAxis("Flip") == 0) { flipStopped = false; }
                 }
+
+                characterAnim.SetBool("flipping", false);
                 board.SetFlipActive(false);
                 board.SetValue(0);
             }
@@ -497,6 +497,8 @@ public class SurfController : MonoBehaviour
                     if (!isGrounded)
                     {
                         RumbleManager.instance.RumbleForTime(0.2f, 0.25f, 0);
+
+                        SetTrailActive(true);
                     }
 
                     WallrideObject wallride; // so can't get grounded on a wallride surface
@@ -525,6 +527,9 @@ public class SurfController : MonoBehaviour
                         jumpVelocity = Mathf.Sqrt(jumpForce / 3 * gravityValue);
                         baseVelocity *= 0.3f;
                         additionalVelocity *= 0.3f;
+                        board.SetFlipActive(false);
+                        board.SetValue(0);
+                        characterAnim.SetTrigger("mistake");
                     }
 
                     if (secondHit.collider.tag == "Floor")
@@ -577,6 +582,8 @@ public class SurfController : MonoBehaviour
 
         if (Input.GetButtonDown("Jump") && isGrounded && !inputDisabled)
         {
+            SetTrailActive(false);
+
             reyAnim.SetTrigger("jump");
             AudioManager.instance.PlaySound("jump");
             jumpVelocity = Mathf.Sqrt(jumpForce * gravityValue);
@@ -652,6 +659,7 @@ public class SurfController : MonoBehaviour
 
         if (isBreaking)
         {
+            if (breakTurnDir == 0) { breakTurnDir = -1; }
             boardRoll = (baseVelocity + additionalVelocity) * -breakTurnDir;
             boardYaw = breakTurnDir * 70;
         }
@@ -837,6 +845,20 @@ public class SurfController : MonoBehaviour
         additionalAccel = accelRate;
         additionalTargetReached = false;
         ScreenShake.instance.ShakeScreen(0.025f, 1f);
+    }
+
+    void SetTrailActive(bool active)
+    {
+        if (active)
+        {
+            leftTrail.Play();
+            rightTrail.Play();
+        }
+        else
+        {
+            leftTrail.Stop();
+            rightTrail.Stop();
+        }
     }
 
     public void AddBoosts(int num)

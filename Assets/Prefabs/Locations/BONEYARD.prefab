@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 8131523490541447857}
   - component: {fileID: 8807112796046856110}
   - component: {fileID: 4505890709813277944}
+  - component: {fileID: 5073432346653867949}
   m_Layer: 0
   m_Name: BONEYARD
   m_TagString: Untagged
@@ -45,9 +46,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a301c049dee7fc42a25e85fbd08465e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  test: 0
   spotName: Boneyard
   spotRadius: 150
+  distFromPlayer: 0
   highScore: 0
   startingScore: 100
   localSkillCieling: 900
@@ -75,7 +76,7 @@ AudioSource:
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 8300000, guid: abddbb3075521074bb3c4909ef358a43, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.471
+  m_Volume: 0.3
   m_Pitch: 1
   Loop: 1
   Mute: 0
@@ -186,3 +187,24 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!135 &5073432346653867949
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8752304270169857859}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 150
+  m_Center: {x: 0, y: 0, z: 0}

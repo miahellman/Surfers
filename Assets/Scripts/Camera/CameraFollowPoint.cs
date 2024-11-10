@@ -12,7 +12,7 @@ public class CameraFollowPoint : MonoBehaviour
     Vector3 offset;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         offset = transform.position - pointToFollow.position;
         Cursor.lockState = CursorLockMode.Locked;
@@ -24,12 +24,12 @@ public class CameraFollowPoint : MonoBehaviour
         //float h = 4 * Input.GetAxis("Mouse X");
         //pointToRotate.Rotate(0, h, 0);
 
-        transform.position = Vector3.Lerp(transform.position, pointToFollow.position + offset, 0.25f);
-        float rotX = Mathf.LerpAngle(transform.eulerAngles.x, pointToFollow.eulerAngles.x, 0.065f);
-        float rotY = Mathf.LerpAngle(transform.eulerAngles.y, pointToFollow.eulerAngles.y, 0.065f);
+        transform.position = Vector3.Lerp(transform.position, pointToFollow.position + offset, 15 * Time.deltaTime);
+        float rotX = Mathf.LerpAngle(transform.eulerAngles.x, pointToFollow.eulerAngles.x, 0.065f * Time.deltaTime);
+        float rotY = Mathf.LerpAngle(transform.eulerAngles.y, pointToFollow.eulerAngles.y, 0.065f * Time.deltaTime);
         //transform.rotation = Quaternion.Euler(new Vector3(rotX, rotY, 0));
         Quaternion r = Quaternion.Euler(new Vector3(pointToFollow.eulerAngles.x, pointToFollow.eulerAngles.y, 0));
-        transform.rotation = Quaternion.Slerp(transform.rotation, r, 0.065f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, r, 3.5f * Time.deltaTime);
     }
 
     void Update()

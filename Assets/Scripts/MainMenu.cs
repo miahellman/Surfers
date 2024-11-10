@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class MainMenu : MonoBehaviour
 {
     [SerializeField] RectTransform topBar;
     [SerializeField] RectTransform bottomBar;
+    [SerializeField] Image[] imagesToFade;
 
     [SerializeField] string startButtonName = "Jump";
     [SerializeField] string quitButtonName = "Wallride";
@@ -53,6 +55,11 @@ public class MainMenu : MonoBehaviour
             {
                 Color color = text.color;
                 text.color = new Color(color.r, color.g, color.b, alpha);
+            }
+            foreach (Image image in imagesToFade)
+            {
+                Color color = image.color;
+                image.color = new Color(color.r, color.g, color.b, alpha);
             }
             yield return null;
         }

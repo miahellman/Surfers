@@ -6,7 +6,7 @@ using TMPro;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] TMP_Text timerText;
+    TMP_Text timerText;
     [SerializeField] GameState startingState = GameState.MENU;
 
     [SerializeField] GameObject camControl;
@@ -34,14 +34,21 @@ public class GameManager : MonoBehaviour
     SurfController player;
     TutorialManager tutorial;
 
+    private void Awake()
+    {
+        player = FindObjectOfType<SurfController>();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         if (instance == null) { instance = this; }
         endScreen = FindObjectOfType<EndScreen>();
-        player = FindObjectOfType<SurfController>();
         mainMenu = FindObjectOfType<MainMenu>();
         tutorial = FindObjectOfType<TutorialManager>();
+
+
+        timerText = ScoreManager.instance.timerText;
 
         UpdateState(startingState);
     }
@@ -88,13 +95,14 @@ public class GameManager : MonoBehaviour
                     break;
                 case GameState.TUTORIAL:
                     CameraControl cam = camControl.GetComponentInChildren<CameraControl>();
-                    Outliner outliner = cam.gameObject.AddComponent<Outliner>();
+                    Outliner outliner = camControl.AddComponent<Outliner>();
                     outliner.SetMats(cam.outlineMats[0], cam.outlineMats[1], cam.outlineMats[2], cam.outlineMats[3]);
+                    //Debug.Log(player == null);
                     player.outliner = outliner;
 
                     camControl.SetActive(true);
                     camFollow.SetActive(true);
-
+                    
                     mainMenu.CloseMenu();
                     mainMenu.enabled = false;
                     break;
