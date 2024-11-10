@@ -26,13 +26,20 @@ public class EndScreen : MonoBehaviour
         {
             if (Input.GetButtonDown(menuButton))
             {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                GameManager.TransitionDelegate transition = RestartScene;
+                GameManager.instance.Transition(transition);
             }
             if(Input.GetButtonDown(playAgainButton))
             {
-                GameManager.instance.PlayAgain();
+                GameManager.TransitionDelegate transition = GameManager.instance.PlayAgain;
+                GameManager.instance.Transition(transition);
             }
         }
+    }
+
+    void RestartScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void SetScreen(int score, SpotInstance1[] spots)

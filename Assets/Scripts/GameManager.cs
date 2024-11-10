@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameManager : MonoBehaviour
@@ -12,6 +13,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] GameObject camFollow;
 
     [SerializeField] Transform restartPoint;
+    [SerializeField] Image blackout;
+
+    public delegate void TransitionDelegate();
+    TransitionDelegate TransitionDel;
 
     public enum GameState { MENU, INTRO, TUTORIAL, GAME, PAUSED, END };
     GameState gameState;
@@ -116,6 +121,35 @@ public class GameManager : MonoBehaviour
         player.transform.position = restartPoint.position;
         ScoreManager.instance.ClearScores();
         UpdateState(GameState.GAME);
+    }
+
+    public void Transition(TransitionDelegate _delegate)
+    {
+        TransitionDel = _delegate;
+        StartCoroutine(TransitionFade());
+    }
+
+    IEnumerator TransitionFade()
+    {
+        float alpha = 0;
+        blackout.color = new Color(blackout.color.r, blackout.color.g, blackout.color.b, alpha);
+        while (alpha < 1)
+        {
+            alpha += 1.5f * Time.deltaTime;
+            blackout.color = new Color(blackout.color.r, blackout.color.g, blackout.color.b, alpha);
+            yield return null;
+        }
+        blackout.color = new Color(blackout.color.r, blackout.color.g, blackout.color.b, 1);
+
+        TransitionDel();
+
+        while (alpha > 0)
+        {
+            alpha -= 1.5f * Time.deltaTime;
+            blackout.color = new Color(blackout.color.r, blackout.color.g, blackout.color.b, alpha);
+            yield return null;
+        }
+        blackout.color = new Color(blackout.color.r, blackout.color.g, blackout.color.b, 0);
     }
 
     public GameState GetGameState() { return gameState; }

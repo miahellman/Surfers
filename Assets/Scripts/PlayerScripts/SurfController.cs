@@ -166,6 +166,8 @@ public class SurfController : MonoBehaviour
 
         reyAnim.SetFloat("speed", Mathf.Abs(rb.velocity.magnitude));
 
+        if (Input.GetKeyDown(KeyCode.F)) { ScreenShake.instance.ShakeScreen(1.25f, 0.25f); }
+
         if (Input.GetButtonDown("Unstuck") && !inputDisabled) { Unstuck(); }
 
         if (transform.position.y <= GameObject.FindGameObjectWithTag("Abyss").transform.position.y)
@@ -270,6 +272,7 @@ public class SurfController : MonoBehaviour
             switch (movementState)
             {
                 case MovementState.STANDARD:
+                    ScreenShake.instance.SetShakeActive(false);
                     flipStopped = false;
                     characterAnim.SetBool("grinding", false);
                     RumbleManager.instance.SetRumbleActive(false);
@@ -491,6 +494,11 @@ public class SurfController : MonoBehaviour
 
                 if (dotProduct > dotTolerance)
                 {
+                    if (!isGrounded)
+                    {
+                        RumbleManager.instance.RumbleForTime(0.2f, 0.25f, 0);
+                    }
+
                     WallrideObject wallride; // so can't get grounded on a wallride surface
                     float wallrideDot = Vector3.Dot(Vector3.up, secondHit.normal);
                     if (secondHit.collider.TryGetComponent(out wallride) && wallrideDot < dotTolerance)
@@ -580,7 +588,7 @@ public class SurfController : MonoBehaviour
         float horInput = Input.GetAxisRaw("Horizontal");
 
         #region breaking
-        if (Input.GetAxis("Break") < 0 || Input.GetButton("Break") && !inputDisabled && baseVelocity > 0.5f)
+        if (Input.GetAxis("Break") < 0 || Input.GetButton("Break") && !inputDisabled && baseVelocity + additionalVelocity > 0.5f)
         {
             if (!isBreaking)
             {
@@ -599,12 +607,10 @@ public class SurfController : MonoBehaviour
 
         if (isBreaking)
         {
-            reyAnim.SetFloat("steerValue", horInput);
             turnVelocity = Mathf.MoveTowards(turnVelocity, 0, breakTurnDecel * Time.deltaTime * localTimeScale);
         }
         else if (Mathf.Abs(horInput) > 0 && !isBreaking && !inputDisabled)
         {
-            reyAnim.SetFloat("steerValue", horInput);
             if (turnVelocity < initTurnSpeed) { turnVelocity += initTurnAccel * Time.deltaTime * localTimeScale; }
             else { turnVelocity += turnAccel * Time.deltaTime * localTimeScale; }
         }
@@ -612,6 +618,7 @@ public class SurfController : MonoBehaviour
         {
             turnVelocity = Mathf.MoveTowards(turnVelocity, 0, turnDecel * Time.deltaTime * localTimeScale);
         }
+        reyAnim.SetFloat("steerValue", horInput);
         #endregion
 
         // MORESO DRIFTING THAN BREAKING
@@ -692,6 +699,7 @@ public class SurfController : MonoBehaviour
     void ProcessGrindMovement()
     {
         RumbleManager.instance.SetRumbleActive(0.05f * (maxSpeed / baseVelocity), 0.35f * (maxSpeed / baseVelocity));
+        ScreenShake.instance.SetShakeActive(Mathf.Min(0.015f * (maxSpeed / baseVelocity), 0.04f));
 
         rb.velocity = grindDir * (baseVelocity + additionalVelocity);
         baseVelocity -= grindDecel * Time.deltaTime * localTimeScale; additionalVelocity -= grindDecel * Time.deltaTime * localTimeScale;
@@ -738,8 +746,8 @@ public class SurfController : MonoBehaviour
             turnVelocity = Mathf.MoveTowards(turnVelocity, 0, turnDecel * Time.deltaTime * localTimeScale);
         }
 
-        if (Input.GetAxis("Horizontal") < 0) { RumbleManager.instance.SetRumbleActive(Mathf.Abs(Input.GetAxis("Horizontal")) * 0.7f, 0); }
-        else { RumbleManager.instance.SetRumbleActive(0, Mathf.Abs(Input.GetAxis("Horizontal")) * 0.7f); }
+        if (Input.GetAxis("Horizontal") < 0) { RumbleManager.instance.SetRumbleActive(Mathf.Abs(Input.GetAxis("Horizontal")) * 0.5f, 0); }
+        else { RumbleManager.instance.SetRumbleActive(0, Mathf.Abs(Input.GetAxis("Horizontal")) * 0.5f); }
 
         turnVelocity = Mathf.Clamp(turnVelocity, 0, maxTurnSpeed / 2);
         yaw = turnVelocity * Input.GetAxis("Horizontal");
@@ -963,6 +971,7 @@ public class SurfController : MonoBehaviour
                     rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
                     RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
                     AudioManager.instance.PlaySound("hit wall", volume: 0.5f);
+                    ScreenShake.instance.ShakeScreen(1.25f, 0.25f);
                 }
             }
         }
@@ -998,6 +1007,7 @@ public class SurfController : MonoBehaviour
                 rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
                 RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
                 AudioManager.instance.PlaySound("hit wall", volume: 0.5f);
+                ScreenShake.instance.ShakeScreen(1.25f, 0.25f);
             }
         }
 
@@ -1027,6 +1037,7 @@ public class SurfController : MonoBehaviour
                     rumbleMultiplier = Mathf.Clamp(rumbleMultiplier, 1, rumbleMultiplier / 30);
                     RumbleManager.instance.RumbleForTime(0.2f, 0.5f * rumbleMultiplier, 0.5f * rumbleMultiplier);
                     AudioManager.instance.PlaySound("hit wall", volume: 0.5f);
+                    ScreenShake.instance.ShakeScreen(1.25f, 0.25f);
                 }
             }
         }

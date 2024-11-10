@@ -150,6 +150,8 @@ public class ScoreManager : MonoBehaviour
 
     public void ScoreTrick(Trick type, int value)
     {
+        RumbleManager.instance.RumbleForTime(0.2f, 0, 1);
+
         if (resetCo != null) { StopCoroutine(resetCo); }
         resetCo = StartCoroutine(ResetSetTimer());
         //trickNameText.text = type.trickName;
@@ -227,8 +229,8 @@ public class ScoreManager : MonoBehaviour
         setScore = 0;
         setTricks = 0;
         multiplierIndex = 0;
-        targetRingFill = 0;
         multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+        targetRingFill = 0;
     }
 
     public void SetCurrentLocation(SpotInstance1 location)
@@ -273,6 +275,9 @@ public class ScoreManager : MonoBehaviour
         overallScore = 0;
         setScore = 0;
         currentLocationScore = 0;
+        multiplierIndex = 0;
+        multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+        targetRingFill = 0;
     }
 
     public int GetOverallScore()

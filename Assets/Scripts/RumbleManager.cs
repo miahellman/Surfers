@@ -44,6 +44,26 @@ public class RumbleManager : MonoBehaviour
         rumbleCo = StartCoroutine(RumbleTimer(time, lowFrequency, highFrequency));
     }
 
+    public void RumblePulse(float pulseLength, float pulseGap, Vector2 lowFrequency, Vector2 highFrequency)
+    {
+        StartCoroutine(Pulse(pulseLength, pulseGap, lowFrequency, highFrequency));
+    }
+
+    IEnumerator Pulse(float pulseLength, float gap, Vector2 lowFrequency, Vector2 highFrequency)
+    {
+        gamepad = Gamepad.current;
+        gamepad.SetMotorSpeeds(lowFrequency.x, highFrequency.x);
+        yield return new WaitForSeconds(pulseLength);
+        gamepad.SetMotorSpeeds(0, 0);
+
+        yield return new WaitForSeconds(gap);
+
+        gamepad = Gamepad.current;
+        gamepad.SetMotorSpeeds(lowFrequency.y, highFrequency.y);
+        yield return new WaitForSeconds(pulseLength);
+        gamepad.SetMotorSpeeds(0, 0);
+    }
+
     IEnumerator RumbleTimer(float time, float lowFrequency, float highFrequency)
     {
         gamepad = Gamepad.current;

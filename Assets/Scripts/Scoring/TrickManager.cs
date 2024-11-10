@@ -7,11 +7,13 @@ namespace Tricks
     public class TrickManager : MonoBehaviour
     {
         [SerializeField] public Trick kickflip;
+        [SerializeField] public Trick heelflip;
         [SerializeField] public Trick grind;
         [SerializeField] public Trick airTime;
         [SerializeField] public Trick wallride;
 
         public static Trick Kickflip;
+        public static Trick Heelflip;
         public static Trick Grind;
         public static Trick AirTime;
         public static Trick Wallride;
@@ -19,6 +21,7 @@ namespace Tricks
         private void Start()
         {
             Kickflip = kickflip;
+            Heelflip = heelflip;
             Grind = grind;
             AirTime = airTime;
             Wallride = wallride;

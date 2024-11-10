@@ -7,7 +7,7 @@ public class ScreenShake : MonoBehaviour
     // I should really change this, it's framerate dependent
     // nvm i just put it in FixedUpdate lol
 
-    [SerializeField] int shakeSpeed = 2; // how many frames will a single shake last for
+    [SerializeField] int shakeSpeed = 1; // how many frames will a single shake last for
 
     float shakeAmount;
     bool shaking = false;
@@ -25,17 +25,17 @@ public class ScreenShake : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         if (shaking)
         {
             shakeFrame++;
             if (shakeFrame % shakeSpeed == 0)
             {
-                float _x = Random.Range(-shakeAmount, shakeAmount);
-                float _y = Random.Range(-shakeAmount, shakeAmount);
-                float _z = Random.Range(-shakeAmount, shakeAmount);
-                transform.localPosition = new Vector3(_x, _y, 0);
+                //float _x = Random.Range(-shakeAmount, shakeAmount);
+                //float _y = Random.Range(-shakeAmount, shakeAmount);
+                //float _z = Random.Range(-shakeAmount, shakeAmount);
+                transform.localPosition = Random.insideUnitSphere * shakeAmount;
             }
         }
         else
@@ -49,6 +49,17 @@ public class ScreenShake : MonoBehaviour
         shakeAmount = amount;
         shaking = true;
         StartCoroutine(WaitAndStopShake(time));
+    }
+
+    public void SetShakeActive(float amount)
+    {
+        shakeAmount = amount;
+        shaking = true;
+    }
+
+    public void SetShakeActive(bool active)
+    {
+        if (!active) { shaking = false; }
     }
 
     IEnumerator WaitAndStopShake(float time)

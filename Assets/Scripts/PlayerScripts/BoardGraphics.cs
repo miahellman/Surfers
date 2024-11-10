@@ -107,7 +107,9 @@ public class BoardGraphics : MonoBehaviour
             if (CheckSuccess())
             {
                 int rotations = Mathf.Abs(Mathf.RoundToInt(targetRot / 360));
-                Trick trick = TrickManager.Kickflip;
+                Trick trick;
+                if (flipValue > 0) { trick = TrickManager.Heelflip; }
+                else { trick = TrickManager.Kickflip; }
                 ScoreManager.instance.ScoreTrick(trick, trick.baseScore * rotations);
                 AudioManager.instance.PlaySound("kickflip stop");
             }
