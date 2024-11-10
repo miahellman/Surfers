@@ -469,19 +469,19 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'DUR TRICK
+  m_text: 'GRIND
 
-    0.00'
+    250'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8ca36d23643038c408d1411b772f0bc9, type: 2}
-  m_sharedMaterial: {fileID: 7567084540620775494, guid: 8ca36d23643038c408d1411b772f0bc9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e116eade912cb864a9b37f9ec480c112, type: 2}
+  m_sharedMaterial: {fileID: 3520754134234031428, guid: e116eade912cb864a9b37f9ec480c112, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4282532605
-  m_fontColor: {r: 0.990566, g: 0.2569865, b: 0.2569865, a: 1}
+    rgba: 4294952589
+  m_fontColor: {r: 0.5518868, g: 0.7759434, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -498,13 +498,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 71.8
-  m_fontSizeBase: 71.8
+  m_fontSize: 65
+  m_fontSizeBase: 65
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 8
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -534,7 +534,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 253.6, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -589,6 +589,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd6be669820133a4e96d7958843ce5f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  flippingOn: 1
   floorRaycastLayers:
     serializedVersion: 2
     m_Bits: 320
@@ -638,6 +639,8 @@ MonoBehaviour:
   wallRideDist: 11
   wallDismountForce: 75
   maxWallrideAgleDiff: 48
+  characterAnim: {fileID: 0}
+  reyAnim: {fileID: 0}
   graphics: {fileID: 0}
 --- !u!54 &4831927078856800369
 Rigidbody:
