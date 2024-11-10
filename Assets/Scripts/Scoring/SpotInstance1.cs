@@ -11,6 +11,8 @@ public class SpotInstance1 : MonoBehaviour
 
     public float spotRadius = 10;
 
+    public float distFromPlayer;
+
 
     public float highScore = 0;
 
@@ -57,6 +59,8 @@ public class SpotInstance1 : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        distFromPlayer = Vector3.Distance(playerTransform.position, transform.position );
+
 
         //If the current highscore is more than the skill cieling of the other boarders, then their score shouldn't get challenged anymore.
         if (highScore < localSkillCieling && ((transform.position - playerTransform.position).magnitude > spotRadius) || playerTransform == transform)

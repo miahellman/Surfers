@@ -1,7 +1,9 @@
+using Fungus;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 public class BoundingCube : MonoBehaviour
 {
@@ -9,6 +11,17 @@ public class BoundingCube : MonoBehaviour
     public Transform player;
 
     public float gizmoCubeOpacity;
+
+    public float distFromBounds;
+
+    public float beginFadeDist = 20;
+
+    public Image screenShroud;
+
+    public float screenFadeProgress = 0;
+
+    public Material fadeMaterial;
+
 
     // Start is called before the first frame update
     void Start()
@@ -21,16 +34,41 @@ public class BoundingCube : MonoBehaviour
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
-        if(!CheckBounds())
+        if (!CheckBounds())
         {
             Debug.Log("Player should warp now!");
 
             WarpPlayer();
 
-
+            distFromBounds = 0;
         }
+        else {
+
+            float currentDist = GetDistFromBounds();
+
+            if (distFromBounds < currentDist)
+            {
+                distFromBounds = Mathf.Lerp(distFromBounds, currentDist, .01f );
+            }
+            else
+            {
+                distFromBounds = currentDist;
+            }
+
+             
+  
+        }
+
+
+        screenFadeProgress = Mathf.Pow( Mathf.InverseLerp(beginFadeDist,0, distFromBounds), .5f );
+
+
+        //screenShroud.color = new Color(1, 1, 1, screenFadeProgress);
+
+        fadeMaterial.SetFloat("_AnimProgress", screenFadeProgress);
+
     }
 
     bool CheckBounds() {
@@ -54,6 +92,42 @@ public class BoundingCube : MonoBehaviour
 
         return false;
     
+    }
+
+
+    public float GetDistFromBounds()
+    {
+
+        //float smallestXDist = Mathf.Min(  ,  );
+
+        //Vector3 testVector3 = new Vector3(1, 2, 3);
+
+        //float testFloat = testVector3[1]; 
+
+        float closestDist = 888888;
+
+        Vector3 upperCubePos = transform.position + transform.lossyScale * .5f;
+        Vector3 lowerCubePos = transform.position - transform.lossyScale * .5f;
+
+
+
+        for (int i = 0; i < 3; i++)
+        {
+            float upperWallDist = Mathf.Abs(player.position[i] - upperCubePos[i]);
+            float lowerWallDist = Mathf.Abs(player.position[i] - lowerCubePos[i]);
+
+            float minDist = Mathf.Min(upperWallDist, lowerWallDist );
+
+            if (minDist < closestDist)
+            {
+                closestDist = minDist;
+            }
+
+        }
+
+
+
+        return closestDist;
     }
 
     public void WarpPlayer() {
@@ -91,7 +165,11 @@ public class BoundingCube : MonoBehaviour
         if (CheckBounds()) {
             Gizmos.color = new Color(0, 1, 0, gizmoCubeOpacity);
         }
-        Gizmos.DrawCube( transform.position, transform.lossyScale );   
+        Gizmos.DrawCube( transform.position, transform.lossyScale );  
+        
+        
     }
+
+    
 
 }
