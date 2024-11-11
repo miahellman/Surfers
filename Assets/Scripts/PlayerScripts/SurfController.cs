@@ -12,6 +12,7 @@ public class SurfController : MonoBehaviour
 
     [Header("Motion")]
     [SerializeField] float maxSpeed = 65f;
+    [SerializeField] float maxVelocity = 65f;
     [SerializeField] float accel = 35f;
     [SerializeField] float decel = 12f;
     [SerializeField] float breakDecelBase = 5f; // starting decel
@@ -438,7 +439,16 @@ public class SurfController : MonoBehaviour
         spinOutVector = Vector3.Lerp(spinOutVector, Vector3.zero, spinOutRecovery * Time.deltaTime * localTimeScale);
         additionalForce = Vector3.Lerp(additionalForce, Vector3.zero, 5 * Time.deltaTime * localTimeScale);
 
+        
+
+
         finalCalculatedVelocity = (baseVelocity + additionalVelocity) * transform.forward + spinOutVector + additionalForce + (Vector3.up * jumpVelocity);
+
+        if (finalCalculatedVelocity.magnitude > maxVelocity)
+        {
+            finalCalculatedVelocity = finalCalculatedVelocity.normalized * maxVelocity;
+        }
+
 
         rb.velocity = finalCalculatedVelocity * localTimeScale;
         #endregion
@@ -471,6 +481,8 @@ public class SurfController : MonoBehaviour
             if (hits.Length > 0)
             {
                 rb.velocity = Vector3.zero;
+
+                
 
                 //Debug.Log(hits[0].collider.name + Time.realtimeSinceStartupAsDouble);
 

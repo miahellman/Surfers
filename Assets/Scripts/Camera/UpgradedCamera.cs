@@ -40,6 +40,7 @@ public class UpgradedCamera : MonoBehaviour
     //The idea here is that we're going to have the camera focus on a spot slightly ahead of the player, which is determined by a few of the following factors!
     //This is the most straightforward one. We sound out a ray with this length, and the camera focuses on that ray's endpoint if the ray hits nothing
     public float focusRayLength = 8;
+    public float camFocusLerpSpeed = .8f;
 
     float currentCamOffsetZ = 0;
     float currentCamOffsetY = 0;
@@ -57,7 +58,7 @@ public class UpgradedCamera : MonoBehaviour
     public LayerMask camReflectionLayerMask;
 
 
-    //public float angularVelocityMultiplier = 1.0f
+    public float angularVelocityMultiplier = 4f;
 
 
     Vector3 customUpDirection;
@@ -129,7 +130,19 @@ public class UpgradedCamera : MonoBehaviour
         }
 
 
-        transform.position = playerTransform.position + customUpDirection * currentCamOffsetY;
+
+        //if (Vector2.Distance( new Vector2( playerTransform.position.x, playerTransform.position.x),  new Vector2( transform.position.x, transform.position.x) ) < currentCamOffsetZ )
+        //{
+            //transform.position = playerTransform.position + customUpDirection * currentCamOffsetY;
+            Vector3 targetCamPos = playerTransform.position + customUpDirection * currentCamOffsetY;
+
+            transform.position = Vector3.Lerp( transform.position, targetCamPos, .1f );
+
+
+        //}
+
+
+
         //transform.position = playerTransform.position + playerTransform.right * currentCamOffsetX;
 
         zoomTransform.localPosition = -Vector3.forward * currentCamOffsetZ;
@@ -155,7 +168,7 @@ public class UpgradedCamera : MonoBehaviour
 
         //Debug.Log("Angular Velocity distance multiplier: " + ((Vector3.Distance(transform.position, zoomTransform.position) / cameraOffsetZ) - 1) );
 
-        //transform.Rotate( new Vector3( 0, playerTransform.GetComponent<Rigidbody>().angularVelocity.y * angularVelocityMultiplier * (Vector3.Distance( transform.position, zoomTransform.position)/cameraOffsetZ )-1 ,0 ) );
+        zoomTransform.localRotation = Quaternion.Euler( new Vector3( 0, playerTransform.GetComponent<Rigidbody>().angularVelocity.y * angularVelocityMultiplier * (Vector3.Distance( transform.position, zoomTransform.position)/currentCamOffsetZ )-1, 0 ) );
 
     }
 
