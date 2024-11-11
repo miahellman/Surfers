@@ -14,6 +14,8 @@ public class EndScreen : MonoBehaviour
     [SerializeField] string playAgainButton;
     [SerializeField] string menuButton;
 
+    bool inputActive = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -25,6 +27,7 @@ public class EndScreen : MonoBehaviour
     {
         if (GameManager.instance.GetGameState() == GameManager.GameState.END)
         {
+            if (!inputActive) { return; }
             if (Input.GetButtonDown(menuButton))
             {
                 GameManager.TransitionDelegate transition = RestartScene;
@@ -45,13 +48,14 @@ public class EndScreen : MonoBehaviour
 
     public void SetScreen(int score, SpotInstance1[] spots)
     {
+        StartCoroutine(WaitAndSetInputActive());
         container.SetActive(true);
         //scoreText.text = score.ToString();
 
         for (int i = 0; i < spots.Length; i++)
         {
             spotTexts[i].text = spots[i].spotName;
-            spotScores[i].text = spots[i].highScore.ToString();
+            spotScores[i].text = Mathf.FloorToInt(spots[i].highScore).ToString();
             //// whether 'player' will be the name tbd
             //if (spots[i].currentOwner == "Player")
             //{
@@ -62,6 +66,13 @@ public class EndScreen : MonoBehaviour
             //    spotTexts[i].color = Color.red;
             //}
         }
+    }
+
+    IEnumerator WaitAndSetInputActive()
+    {
+        inputActive = false;
+        yield return new WaitForSeconds(1);
+        inputActive = true;
     }
 
     public void Close()

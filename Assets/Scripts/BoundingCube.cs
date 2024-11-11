@@ -156,6 +156,7 @@ public class BoundingCube : MonoBehaviour
         Rigidbody playerRB = player.GetComponent<Rigidbody>(); 
         if (playerRB != null) { 
             playerRB.position = closestPosition;
+            playerRB.GetComponent<SurfController>().ZeroVelocity();
         }
     }
     private void OnDrawGizmos()

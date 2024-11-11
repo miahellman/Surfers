@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TutorialManager : MonoBehaviour
 {
+    [SerializeField] AudioSource audio;
     [SerializeField] TutorialZone[] zones;
     [SerializeField] GameObject dummyPlayer;
 
@@ -56,6 +57,7 @@ public class TutorialManager : MonoBehaviour
     {
         player.SetActive(active);
         dummyPlayer.SetActive(false);
+        audio.Play();
 
         foreach (TutorialZone zone in zones)
         {

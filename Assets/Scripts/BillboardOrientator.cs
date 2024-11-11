@@ -13,6 +13,7 @@ public class BillboardOrientator : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (GameManager.instance.GetGameState() != GameManager.GameState.GAME || GameManager.instance.GetGameState() != GameManager.GameState.TUTORIAL) { return; }
         transform.rotation = Camera.main.transform.rotation;
     }
 }

@@ -88,12 +88,19 @@ public class GameManager : MonoBehaviour
             switch(gameState)
             {
                 case GameState.MENU:
+                    RumbleManager.instance.SetRumbleActive(false);
                     ScoreManager.instance.SetCanvasActive(false);
                     break;
                 case GameState.INTRO:
+                    RumbleManager.instance.SetRumbleActive(false);
                     tutorial.StartIntro();
                     break;
                 case GameState.TUTORIAL:
+                    foreach (SpotInstance1 location in ScoreManager.instance.GetLocations())
+                    {
+                        location.GetComponentInChildren<AudioSource>().Play();
+                    }
+
                     CameraControl cam = camControl.GetComponentInChildren<CameraControl>();
                     Outliner outliner = camControl.AddComponent<Outliner>();
                     outliner.SetMats(cam.outlineMats[0], cam.outlineMats[1], cam.outlineMats[2], cam.outlineMats[3]);
@@ -102,7 +109,7 @@ public class GameManager : MonoBehaviour
 
                     camControl.SetActive(true);
                     camFollow.SetActive(true);
-                    
+
                     mainMenu.CloseMenu();
                     mainMenu.enabled = false;
                     break;
@@ -115,6 +122,14 @@ public class GameManager : MonoBehaviour
                     timer = startTime;
                     break;
                 case GameState.END:
+                    AudioManager.instance.PlaySound("end boom", volume: 1f);
+                    RumbleManager.instance.SetRumbleActive(false);
+                    
+                    foreach (SpotInstance1 location in ScoreManager.instance.GetLocations())
+                    {
+                        location.GetComponentInChildren<AudioSource>().Stop();
+                    }
+
                     timerRunning = false;
                     endScreen.SetScreen(ScoreManager.instance.GetOverallScore(), ScoreManager.instance.GetLocations());
                     player.DisableInput(true);
@@ -127,8 +142,13 @@ public class GameManager : MonoBehaviour
 
     public void PlayAgain()
     {
+        foreach (SpotInstance1 location in ScoreManager.instance.GetLocations())
+        {
+            location.GetComponentInChildren<AudioSource>().Play();
+        }
         player.transform.position = restartPoint.position;
         ScoreManager.instance.ClearScores();
+        player.transform.localEulerAngles = new Vector3(0, 90, 0);
         UpdateState(GameState.GAME);
     }
 

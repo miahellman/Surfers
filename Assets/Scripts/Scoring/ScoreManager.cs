@@ -61,6 +61,8 @@ public class ScoreManager : MonoBehaviour
     float targetRingFill;
     TMP_Text activeText;
 
+    bool transitioningLevels = false;
+
     Coroutine resetCo;
 
     // Start is called before the first frame update
@@ -131,6 +133,7 @@ public class ScoreManager : MonoBehaviour
             }
         }
 
+        if (transitioningLevels) { return; }
         multiplierRingFill.fillAmount = Mathf.MoveTowards(multiplierRingFill.fillAmount, targetRingFill, multiplierFillSpeed * Time.deltaTime);
     }
 
@@ -191,9 +194,7 @@ public class ScoreManager : MonoBehaviour
             int nextThreshold = multiplierThresholds[multiplierIndex + 1];
             if (setTricks >= nextThreshold)
             {
-                multiplierIndex++;
-                setTricks = 0;
-                multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+                StartCoroutine(NextRingLevel());
             }
             targetRingFill = (float)setTricks / (float)multiplierThresholds[multiplierIndex + 1];
         }
@@ -223,6 +224,26 @@ public class ScoreManager : MonoBehaviour
         }
     }
 
+    IEnumerator NextRingLevel()
+    {
+        transitioningLevels = true;
+        multiplierRingFill.fillClockwise = false;
+        float fill = 1;
+        while (fill > 0)
+        {
+            fill -= 1.25f * Time.deltaTime;
+            multiplierRingFill.fillAmount = fill;
+            yield return null;
+        }
+        multiplierRingFill.fillAmount = 0;
+        multiplierIndex++;
+        multiplierText.text = multiplierLevels[multiplierIndex].ToString() + "x";
+        setTricks = 0;
+        multiplierRingFill.fillClockwise = true;
+        targetRingFill = 0;
+        transitioningLevels = false;
+    }
+
     IEnumerator ResetSetTimer()
     {
         yield return new WaitForSeconds(maxDownTime);
@@ -246,6 +267,7 @@ public class ScoreManager : MonoBehaviour
     void ScoreSet()
     {
         int setBonus = Mathf.FloorToInt(setScore * (1 - multiplierLevels[multiplierIndex]));
+        Debug.Log(setBonus + setScore);
         currentLocationScore += setBonus + setScore;
         overallScore += setBonus;
         locationScoreText.text = currentLocationScore.ToString();

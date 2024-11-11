@@ -663,7 +663,7 @@ public class SurfController : MonoBehaviour
 
             //Quaternion currentToVelocityForward = Quaternion.FromToRotation(transform.forward, rb.velocity.normalized) * transform.rotation;
             Quaternion currentToVelocityForward = Quaternion.LookRotation(rb.velocity.normalized, upDirection); ;
-            Quaternion slerpedVelocityAlignmentRot = Quaternion.Slerp(rb.rotation, currentToVelocityForward, 2f * Time.deltaTime * localTimeScale);
+            Quaternion slerpedVelocityAlignmentRot = Quaternion.Slerp(rb.rotation, currentToVelocityForward, 1.75f * Time.deltaTime * localTimeScale);
 
             rb.rotation = slerpedVelocityAlignmentRot;
 
@@ -743,7 +743,7 @@ public class SurfController : MonoBehaviour
             UpdateState(MovementState.STANDARD);
             currentGrind.HighlightColor(false);
             currentGrind = null;
-            jumpVelocity = Mathf.Sqrt(jumpForce / 2 * gravityValue);
+            jumpVelocity = Mathf.Sqrt(jumpForce / 1.5f * gravityValue);
             ScoreManager.instance.StopTrick();
         }
     }
@@ -1086,12 +1086,18 @@ public class SurfController : MonoBehaviour
     public void Unstuck()
     {
         //transform.position = FindObjectOfType<BoundingCube>().WarpPlayer(false);
-        print(unstuckPosition);
         baseVelocity = 0;
         additionalVelocity = 0;
         transform.position = unstuckPosition;
         jumpVelocity = 0;
         transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
+    }
+    
+    public void ZeroVelocity()
+    {
+        baseVelocity = 0;
+        additionalVelocity = 0;
+        additionalForce = Vector3.zero;
     }
 
     public void DisableInput(bool disabled)

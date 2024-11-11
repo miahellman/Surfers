@@ -64,6 +64,10 @@ MonoBehaviour:
     clip: {fileID: 8300000, guid: 40dabf148de0f0a44b5b79cf39ab5003, type: 3}
   - name: growl
     clip: {fileID: 8300000, guid: 1286f60a72010c74c8efd94b18d15332, type: 3}
+  - name: end boom
+    clip: {fileID: 8300000, guid: aa7e4d297f230ed418c71c116eebb6b2, type: 3}
+  - name: title boom
+    clip: {fileID: 8300000, guid: b2fc23b57e658b348a42be61c3957be8, type: 3}
 --- !u!82 &1300946062411530450
 AudioSource:
   m_ObjectHideFlags: 0

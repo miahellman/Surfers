@@ -31,9 +31,11 @@ public class MainMenu : MonoBehaviour
         if (Input.GetButtonDown(startButtonName) && !started)
         {
             TransitionToTutorial();
+            AudioManager.instance.PlaySound("title boom", volume: 1f);
+            RumbleManager.instance.RumbleForTime(0.5f, 1, 0.5f);
         }
 
-        if (Input.GetButtonDown(quitButtonName))
+        if (Input.GetButtonDown(quitButtonName) && !started)
         {
             Application.Quit();
         }
