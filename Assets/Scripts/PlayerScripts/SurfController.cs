@@ -363,7 +363,7 @@ public class SurfController : MonoBehaviour
                     characterAnim.SetBool("flipping", false);
                     if (!board.CheckSuccess())
                     {
-                        characterAnim.SetTrigger("mistake");
+                        //characterAnim.SetTrigger("mistake");
                         baseVelocity *= 0.3f;
                         additionalVelocity *= 0.3f;
                     }

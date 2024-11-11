@@ -4793,7 +4793,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 0
   MinDistance: 106.02586
-  MaxDistance: 146.94446
+  MaxDistance: 157.41748
   Pan2D: 0
   rolloffMode: 2
   BypassEffects: 0
@@ -4803,8 +4803,8 @@ AudioSource:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0.38941017
-      value: 0.99451447
+      time: 0.39501014
+      value: 0.99726105
       inSlope: -9.024535
       outSlope: -9.024535
       tangentMode: 0
@@ -4812,8 +4812,8 @@ AudioSource:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.4577754
-      value: 0.48459625
+      time: 0.49137527
+      value: 0.50380707
       inSlope: -2.2561338
       outSlope: -2.2561338
       tangentMode: 0
@@ -4821,8 +4821,8 @@ AudioSource:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.576409
-      value: 0.2135315
+      time: 0.65291655
+      value: 0.2409668
       inSlope: -0.99967265
       outSlope: -0.99967265
       tangentMode: 0
@@ -4830,14 +4830,14 @@ AudioSource:
       inWeight: 0
       outWeight: 0.36215505
     - serializedVersion: 3
-      time: 0.7105572
-      value: 0.06350708
-      inSlope: -0.23941799
-      outSlope: -0.23941799
+      time: 0.80571103
+      value: 0.09915161
+      inSlope: -0.6563217
+      outSlope: -0.6563217
       tangentMode: 0
       weightedMode: 0
       inWeight: 0.28112695
-      outWeight: 0
+      outWeight: 0.4459159
     - serializedVersion: 3
       time: 0.9945679
       value: 0
@@ -15753,6 +15753,54 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b5755b94035466a4dac0983195d8ecf1, type: 3}
+--- !u!1 &642286234
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 642286236}
+  - component: {fileID: 642286235}
+  m_Layer: 5
+  m_Name: ButtonRefocus
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &642286235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 642286234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 480078ce8e0117c47afb04654e9a1936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!224 &642286236
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 642286234}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.40583333, y: 0.40583333, z: 0.40583333}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 1065.7085, y: 600}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1001 &644158911
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24088,11 +24136,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5073432346653867949, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
       propertyPath: m_Radius
-      value: 110
+      value: 117.8
       objectReference: {fileID: 0}
     - target: {fileID: 8131523490541447857, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 182.1
+      value: 173.5
       objectReference: {fileID: 0}
     - target: {fileID: 8131523490541447857, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
       propertyPath: m_LocalPosition.y
@@ -24100,7 +24148,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8131523490541447857, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 18.8
+      value: 18.7
       objectReference: {fileID: 0}
     - target: {fileID: 8131523490541447857, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
       propertyPath: m_LocalRotation.w
@@ -24144,7 +24192,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8807112796046856110, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
       propertyPath: spotRadius
-      value: 110
+      value: 117.8
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 4505890709813277944, guid: 7a3a51e100a0b844f8307f9db7e92094, type: 3}
@@ -35564,7 +35612,7 @@ AudioSource:
       inWeight: 0.28112695
       outWeight: 0.51623124
     - serializedVersion: 3
-      time: 0.9571228
+      time: 0.9944153
       value: 0
       inSlope: -0.11089761
       outSlope: -0.11089761
@@ -53417,7 +53465,7 @@ PrefabInstance:
       objectReference: {fileID: 388387210}
     - target: {fileID: 1558020504692462013, guid: f5910144fbe26ea43be6475ce6ad48b7, type: 3}
       propertyPath: quitButtonName
-      value: Jump
+      value: Cancel
       objectReference: {fileID: 0}
     - target: {fileID: 1558020504692462013, guid: f5910144fbe26ea43be6475ce6ad48b7, type: 3}
       propertyPath: startButtonName
@@ -53650,5 +53698,6 @@ SceneRoots:
   - {fileID: 1378697723}
   - {fileID: 118338124}
   - {fileID: 1453235391}
+  - {fileID: 642286236}
   - {fileID: 289874509}
   - {fileID: 1332660209}
