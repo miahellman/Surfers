@@ -604,9 +604,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   topBar: {fileID: 2287715003213809439}
   bottomBar: {fileID: 959345112922046572}
-  controls:
+  imagesToFade:
   - {fileID: 4555269729302954644}
   - {fileID: 2032657815614099839}
+  - {fileID: 5210917165105096308}
   startButtonName: Jump
   quitButtonName: Wallride
   menuCam: {fileID: 0}

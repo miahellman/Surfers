@@ -110,6 +110,7 @@ public class GameManager : MonoBehaviour
                     endScreen.Close();
                     player.DisableInput(false);
                     ScoreManager.instance.SetCanvasActive(true);
+                    ScoreManager.instance.Set();
                     timerRunning = true;
                     timer = startTime;
                     break;

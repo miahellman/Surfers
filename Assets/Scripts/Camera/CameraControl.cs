@@ -22,7 +22,7 @@ public class CameraControl : MonoBehaviour
     public static CameraControl instance;
 
     // Start is called before the first frame update
-    void Awake()
+    void Start()
     {
         defaultFOV = GetComponent<Camera>().fieldOfView;
         followPointController = GetComponentInParent<CameraFollowPoint>();

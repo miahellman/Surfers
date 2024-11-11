@@ -31,7 +31,7 @@ public class TutorialManager : MonoBehaviour
 
     public void TriggerZone(string zoneName)
     {
-        if (zoneName == "end")
+        if (zoneName == "end zone")
         {
             tutorialComplete = true;
             GameManager.instance.UpdateState(GameManager.GameState.GAME);
@@ -57,12 +57,9 @@ public class TutorialManager : MonoBehaviour
         player.SetActive(active);
         dummyPlayer.SetActive(false);
 
-        if (!tutorial)
+        foreach (TutorialZone zone in zones)
         {
-            foreach (TutorialZone zone in zones)
-            {
-                Destroy(zone);
-            }
+            Destroy(zone);
         }
     }
 }

@@ -36,6 +36,8 @@ public class BoundingCube : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (GameManager.instance.GetGameState() == GameManager.GameState.MENU || GameManager.instance.GetGameState() == GameManager.GameState.INTRO) { return; }
+
         if (!CheckBounds())
         {
             Debug.Log("Player should warp now!");
