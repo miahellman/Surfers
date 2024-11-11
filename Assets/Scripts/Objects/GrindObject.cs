@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GrindObject : Interactable
 {
+    [SerializeField] Renderer[] associatedRenderers;
+
     [Header("Grind Directions")]
     [SerializeField] public bool forward = false;
     [SerializeField] public bool backward = false;
