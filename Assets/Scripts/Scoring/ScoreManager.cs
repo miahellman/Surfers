@@ -84,6 +84,24 @@ public class ScoreManager : MonoBehaviour
         //overallScoreText.text = overallScore.ToString();
     }
 
+    public void Set()
+    {
+        durTrickText.text = "";
+        wallrideLeftText.text = "";
+        wallrideRightText.text = "";
+        locationScoreText.text = currentLocationScore.ToString();
+        setScoreText.text = setScore.ToString();
+        locationNameText.text = "";
+
+        if (locations.Length > 0)
+        {
+            for (int i = 0; i < locationCards.Length; i++)
+            {
+                locationCards[i].SetCard(locations[i].spotName);
+            }
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -215,6 +233,7 @@ public class ScoreManager : MonoBehaviour
     public void SetCanvasActive(bool active)
     {
         canvas.SetActive(active);
+        Set();
     }
 
     public void ForceStopSet()
@@ -262,8 +281,10 @@ public class ScoreManager : MonoBehaviour
             if (currentLocation.highScore < currentLocationScore) { locationCards[locationIndex].UpdateCard(currentLocationScore); }
             currentLocation.ProcessNewScore(currentLocationScore, "Player");
             locationNameText.text = "";
-            //locationCards[locationIndex].SetOwned(currentLocation.currentOwner == "Player");
 
+            //locationCards[locationIndex].SetOwned(currentLocation.currentOwner == "Player");
+            currentLocationScore = 0;
+            locationScoreText.text = "0";
             currentLocation = null;
         } 
         else

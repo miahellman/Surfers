@@ -13,7 +13,7 @@ public class TutorialZone : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        manager = GetComponentInParent<TutorialManager>();
+        manager = FindObjectOfType<TutorialManager>();
     }
 
     // Update is called once per frame
