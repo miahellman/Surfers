@@ -9,6 +9,7 @@ public class EndScreen : MonoBehaviour
     [SerializeField] TMP_Text scoreText;
     [SerializeField] GameObject container;
     [SerializeField] TMP_Text[] spotTexts;
+    [SerializeField] TMP_Text[] spotScores;
 
     [SerializeField] string playAgainButton;
     [SerializeField] string menuButton;
@@ -45,12 +46,12 @@ public class EndScreen : MonoBehaviour
     public void SetScreen(int score, SpotInstance1[] spots)
     {
         container.SetActive(true);
-        scoreText.text = score.ToString();
+        //scoreText.text = score.ToString();
 
         for (int i = 0; i < spots.Length; i++)
         {
             spotTexts[i].text = spots[i].spotName;
-            
+            spotScores[i].text = spots[i].highScore.ToString();
             //// whether 'player' will be the name tbd
             //if (spots[i].currentOwner == "Player")
             //{
